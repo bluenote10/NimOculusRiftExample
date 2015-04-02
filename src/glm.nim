@@ -3,9 +3,25 @@ import utils
 from strutils import `%`, join
 
 type
-  Mat3 = object
+  Mat3* = object
     data*: array[9, float]
 
+proc `[]`*(m: Mat3, i, j: int): float =
+  m.data[j*3 + i]
+
+proc `[]=`*(m: var Mat3, i, j: int, x: float) =
+  m.data[j*3 + i] = x
+  
+proc `*`(this: Mat3, that: Mat3): Mat3 =
+  var data = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
+  result = Mat3(data: data)
+  for i in 0 .. <3:
+    for j in 0 .. <3:
+      for k in 0 .. <3:
+        #result[i,j] = result[i,j] + this[i,k] * that[k,j]
+        result[i,j] += this[i,k] * that[k,j]
+  
+  
 proc m00(m: Mat3): float = m.data[0]
 proc m01(m: Mat3): float = m.data[1]
 proc m02(m: Mat3): float = m.data[2]
@@ -16,7 +32,7 @@ proc m20(m: Mat3): float = m.data[6]
 proc m21(m: Mat3): float = m.data[7]
 proc m22(m: Mat3): float = m.data[8]
 
-proc `*`(this: Mat3, that: Mat3): Mat3 =
+proc `**`(this: Mat3, that: Mat3): Mat3 =
   var data = [
     this.m00 * that.m00 + this.m10 * that.m01 + this.m20 * that.m02,
     this.m01 * that.m00 + this.m11 * that.m01 + this.m21 * that.m02,
@@ -46,7 +62,7 @@ runUnitTests:
     m = mat3CreateIdentity()
     o = mat3CreateIdentity()
 
-  echo($m, m.m00, m*o)
+  echo($m, m.m00, m[0,0], m*o)
 
 
 
