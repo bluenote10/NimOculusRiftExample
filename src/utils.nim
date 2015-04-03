@@ -1,6 +1,18 @@
 
 from strutils import `%`, join
 
+import typetraits
+
+proc takesTuple(t: tuple) =
+  echo t
+  echo t.type.name # crashes
+  echo t.type.arity # crashes
+  echo repr(t.type) # crashes as well, but with: Error: internal error: GetUniqueType, No stack traceback available
+
+var
+  t = (1, "Test", (1,2,3), 3.14)
+
+takesTuple(t)
 
 template filename: string =
   instantiationInfo().filename
@@ -17,6 +29,31 @@ template newSeqFill(len: int, init: expr): expr =
     result[i] = init
   result
 
+
+template toArray[T](slice: Slice[T]): stmt =
+  #var result = array[]
+  echo slice.a
+  echo slice.b
+  var result: array[slice.b-slice.a, slice.T]
+  #for i in slice:
+  #  echo i
+
+#toArray(1..10)
+(1..10).toArray
+
+
+for i in 5..15:
+  echo i
+
+import typetraits
+  
+when true:
+  const slice = 5..15
+  #echo slice.type.name
+  for i in slice:
+    echo i
+
+  
 #proc printf*(formatstr: cstring) {.header: "<stdio.h>", varargs.}
 proc printf(formatstr: cstring) {.header: "<stdio.h>", importc: "printf", varargs.}
 

@@ -3,13 +3,14 @@ import utils
 from strutils import `%`, join
 
 type
+  Mat3Index = range[0..2]
   Mat3* = object
     data*: array[9, float]
 
-proc `[]`*(m: Mat3, i, j: int): float =
+proc `[]`*(m: Mat3, i, j: Mat3Index): float =
   m.data[j*3 + i]
 
-proc `[]=`*(m: var Mat3, i, j: int, x: float) =
+proc `[]=`*(m: var Mat3, i, j: Mat3Index, x: float) =
   m.data[j*3 + i] = x
   
 proc `*`(this: Mat3, that: Mat3): Mat3 =
@@ -18,8 +19,8 @@ proc `*`(this: Mat3, that: Mat3): Mat3 =
   for i in 0 .. <3:
     for j in 0 .. <3:
       for k in 0 .. <3:
-        #result[i,j] = result[i,j] + this[i,k] * that[k,j]
-        result[i,j] += this[i,k] * that[k,j]
+        result[i,j] = result[i,j] + this[i,k] * that[k,j]
+        #result[i,j] += this[i,k] * that[k,j]
   
   
 proc m00(m: Mat3): float = m.data[0]
