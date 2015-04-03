@@ -21,6 +21,14 @@ iterator items*[T](s: Slice[T]): T =
   for i in s.a .. s.b:
     yield i
 
+when false:
+  iterator enumerate*[T](iter: T): tuple[key: int, val: T] =
+    var i = 0
+    for x in iter:
+      yield (i, x)
+      inc i
+      
+    
 when false:    
   iterator `..`*[S, T](a: S, b: T): tuple[key: int, val: T] {.inline.} =
     ## An alias for `countup`.
@@ -41,6 +49,7 @@ iterator pairs*[T](s: Slice[T]): tuple[key: int, val: T] {.inline.} =
 template toArray[T](slice: Slice[T]): expr =
   var result: array[slice.b-slice.a+1, slice.T]
   for i, x in pairs(slice):
+  #for i, x in enumerate(slice):
     result[i] = x
   result
 
