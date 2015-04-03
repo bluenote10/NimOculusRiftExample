@@ -1,18 +1,6 @@
 
 from strutils import `%`, join
 
-import typetraits
-
-proc takesTuple(t: tuple) =
-  echo t
-  echo t.type.name # crashes
-  echo t.type.arity # crashes
-  echo repr(t.type) # crashes as well, but with: Error: internal error: GetUniqueType, No stack traceback available
-
-var
-  t = (1, "Test", (1,2,3), 3.14)
-
-takesTuple(t)
 
 template filename: string =
   instantiationInfo().filename
@@ -29,29 +17,35 @@ template newSeqFill(len: int, init: expr): expr =
     result[i] = init
   result
 
+iterator items*[T](s: Slice[T]): T =
+  for i in s.a .. s.b:
+    yield i
 
-template toArray[T](slice: Slice[T]): stmt =
-  #var result = array[]
-  echo slice.a
-  echo slice.b
-  var result: array[slice.b-slice.a, slice.T]
-  #for i in slice:
-  #  echo i
+when false:    
+  iterator `..`*[S, T](a: S, b: T): tuple[key: int, val: T] {.inline.} =
+    ## An alias for `countup`.
+    var i = 0
+    var x = a
+    while x <= int(b):
+      yield (i, x)
+      inc i
+      inc x
+    
+iterator pairs*[T](s: Slice[T]): tuple[key: int, val: T] {.inline.} =
+  var i = 0
+  for x in s.a .. s.b:
+    yield (i, x)
+    inc i
+    
+    
+template toArray[T](slice: Slice[T]): expr =
+  var result: array[slice.b-slice.a+1, slice.T]
+  for i, x in pairs(slice):
+    result[i] = x
+  result
 
-#toArray(1..10)
-(1..10).toArray
-
-
-for i in 5..15:
-  echo i
-
-import typetraits
-  
-when true:
-  const slice = 5..15
-  #echo slice.type.name
-  for i in slice:
-    echo i
+var arr = (1..10).toArray
+echo repr(arr)
 
   
 #proc printf*(formatstr: cstring) {.header: "<stdio.h>", varargs.}
