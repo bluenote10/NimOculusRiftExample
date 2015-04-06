@@ -2,12 +2,14 @@
 import utils
 import glm
 import opengl
-import src/glfw3
 from strutils import `%`, join
+import os
 
+import window
+import shader
 import ../bindings/ovr as ovr
 
-echo "Hello World"
+echo "\n *** ----------------- running -----------------"
 
 proc callback(level: cint; message: cstring) {.cdecl.} =
   echo "Log: " & $level & $message
@@ -27,10 +29,16 @@ block:
 
   var hmd = ovr.hmdCreate(index-1)
   echo "hmd: ", hmd.repr
-  
-runUnitTests():
-  echo "Main"
-    
+
+
+var win = createWindow(100, 100, 800, 600)
+
+shader.shaderProgramCreate("", "")
+echo "returned from shaderProgramCreate"
+os.sleep(1000)
+
+
+echo "done"    
     
 
 

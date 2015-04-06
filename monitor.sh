@@ -13,6 +13,6 @@ while true; do
   sleep 0.01
 
   clear
-  echo "changed: $change"
+  echo "changed: $change `date +%T`"
   echo "changed: $change" >> .changes
 done
