@@ -36,7 +36,13 @@ else:
     libname* = "libOVRRT64_0.so.5"
 
 type 
-  ovrBool* = char
+  ovrBool* = cchar
+  uint32_t = uint32
+  uintptr_t = ptr uint
+
+proc toBool*(ob: ovrBool): bool =
+  if ob == char(0): false else: true
+  
 const 
   ovrFalse* = 0
   ovrTrue* = 1
@@ -211,9 +217,9 @@ type
     HmdCaps* : cuint                            # Capability bits described by ovrHmdCaps.
     TrackingCaps* : cuint                       # Capability bits described by ovrTrackingCaps.
     DistortionCaps* : cuint                     # Capability bits described by ovrDistortionCaps.
-    DefaultEyeFov* : array[Eye_Count, FovPort]  # The recommended optical FOV for the HMD.
-    MaxEyeFov* : array[Eye_Count, FovPort]      # The maximum optical FOV for the HMD.
-    EyeRenderOrder* : array[Eye_Count, EyeType] # Preferred eye rendering order for best performance.
+    DefaultEyeFov* : array[2, FovPort]          # The recommended optical FOV for the HMD.
+    MaxEyeFov* : array[2, FovPort]              # The maximum optical FOV for the HMD.
+    EyeRenderOrder* : array[2, EyeType]         # Preferred eye rendering order for best performance.
                                                 # Can help reduce latency on sideways-scanned screens.
     Resolution* : Sizei                         # Resolution of the full HMD screen (both eyes) in pixels.
     WindowsPos* : Vector2i                      # Location of the application window on the desktop (or 0,0).
@@ -394,11 +400,11 @@ when false:
 
 # Flags for Initialize()
 type 
-  InitFlags* {.size: sizeof(cint).} = enum 
+  InitFlags* {.size: sizeof(cint).} = enum
     Init_Debug          = 0x00000001, 
     Init_ServerOptional = 0x00000002, 
     Init_RequestVersion = 0x00000004, 
-    Init_ForceNoDebug = 0x00000008
+    Init_ForceNoDebug   = 0x00000008
 
 # Logging levels
 type 
@@ -415,40 +421,49 @@ type
 # Parameters for the ovr_Initialize() call.
 type 
   InitParams* = object 
-    Flags* : uint32_t 
+    Flags* : InitFlags # uint32_t 
     RequestedMinorVersion* : uint32_t
     LogCallback* : LogCallback
     ConnectionTimeoutMS* : uint32_t
 
+    
+proc initialize*(params: ptr InitParams): ovrBool
+  {.cdecl, importc: "ovr_Initialize", dynlib: libname.}
+
+proc shutdown*()
+  {.cdecl, importc: "ovr_Shutdown", dynlib: libname.}
+
+proc getVersionString*(): cstring
+  {.cdecl, importc: "ovr_GetVersionString", dynlib: libname.}
+
+proc hmdDetect*(): cint
+  {.cdecl, importc: "ovrHmd_Detect", dynlib: libname.}
+
+proc hmdCreate*(index: cint): Hmd
+  {.cdecl, importc: "ovrHmd_Create", dynlib: libname.}
+
+proc hmdDestroy*(hmd: Hmd)
+  {.cdecl, importc: "ovrHmd_Destroy", dynlib: libname.}
+
+proc hmdCreateDebug*(`type`: HmdType): Hmd
+  {.cdecl, importc: "ovrHmd_CreateDebug", dynlib: libname.}
+
+proc hmdGetLastError*(hmd: Hmd): cstring
+  {.cdecl, importc: "ovrHmd_GetLastError", dynlib: libname.}
+
+proc hmdAttachToWindow*(hmd: Hmd,
+                         window: pointer, 
+                         destMirrorRect: ptr Recti, 
+                         sourceRenderTargetRect: ptr Recti): ovrBool
+  {.cdecl, importc: "ovrHmd_AttachToWindow", dynlib: libname.}
+
+proc hmdGetEnabledCaps*(hmd: Hmd): cuint
+  {.cdecl, importc: "ovrHmd_GetEnabledCaps", dynlib: libname.}
+proc hmdSetEnabledCaps*(hmd: Hmd, hmdCaps: cuint)
+  {.cdecl, importc: "ovrHmd_SetEnabledCaps", dynlib: libname.}
+
 when false:
     
-  proc initialize(params: ptr InitParams): ovrBool
-    {.cdecl, importc: "ovr_Initialize", dynlib: libovr.}
-
-  proc shutdown()
-    {.cdecl, importc: "ovr_Initialize", dynlib: libovr.}
-
-  proc getVersionString()
-    {.cdecl, importc: "ovr_Initialize", dynlib: libovr.}
-  proc Hmd_Detect()
-    {.cdecl, importc: "ovr_Initialize", dynlib: libovr.}
-  proc Hmd_Create(int, index)
-    {.cdecl, importc: "ovr_Initialize", dynlib: libovr.}
-  proc Hmd_Destroy(Hmd, hmd)
-    {.cdecl, importc: "ovr_Initialize", dynlib: libovr.}
-  proc Hmd_CreateDebug(HmdType, `type`)
-    {.cdecl, importc: "ovr_Initialize", dynlib: libovr.}
-  proc Hmd_GetLastError(Hmd, hmd)
-    {.cdecl, importc: "ovr_Initialize", dynlib: libovr.}
-  proc Hmd_AttachToWindow(Hmd, hmd, void * window, `const`, 
-                        Recti * destMirrorRect, `const`, 
-                        Recti * sourceRenderTargetRect)
-    {.cdecl, importc: "ovr_Initialize", dynlib: libovr.}
-  proc Hmd_GetEnabledCaps(Hmd, hmd)
-    {.cdecl, importc: "ovr_Initialize", dynlib: libovr.}
-  proc Hmd_SetEnabledCaps(Hmd, hmd, unsigned, int, hmdCaps)
-    {.cdecl, importc: "ovr_Initialize", dynlib: libovr.}
-
   #-------------------------------------------------------------------------------------
   # ***** Tracking Interface
   #/ All tracking interface functions are thread-safe, allowing tracking state to be sampled
@@ -463,18 +478,18 @@ when false:
   #/    If they are not available, the function will fail. Pass 0 if only specifying
   #/    supportedTrackingCaps.
   #/  - Pass 0 for both supportedTrackingCaps and requiredTrackingCaps to disable tracking.
-  Hmd_ConfigureTracking(Hmd, hmd, unsigned, int, supportedTrackingCaps, 
+  Hmd_ConfigureTracking*(Hmd, hmd, unsigned, int, supportedTrackingCaps, 
                            unsigned, int, requiredTrackingCaps)
   #/ Re-centers the sensor orientation.
   #/ Normally this will recenter the (x,y,z) translational components and the yaw
   #/ component of orientation.
-  Hmd_RecenterPose(Hmd, hmd)
+  Hmd_RecenterPose*(Hmd, hmd)
   #/ Returns tracking state reading based on the specified absolute system time.
   #/ Pass an absTime value of 0.0 to request the most recent sensor reading. In this case
   #/ both PredictedPose and SamplePose will have the same value.
   #/ ovrHmd_GetEyePoses relies on a valid ovrTrackingState.
   #/ This may also be used for more refined timing of FrontBuffer rendering logic, etc.
-  Hmd_GetTrackingState(Hmd, hmd, double, absTime)
+  Hmd_GetTrackingState*(Hmd, hmd, double, absTime)
   #-------------------------------------------------------------------------------------
   # ***** Graphics Setup
   #/ Calculates the recommended viewport size for rendering a given eye within the HMD
@@ -486,7 +501,7 @@ when false:
   #/ Apps packing multiple eye views together on the same textue should ensure there is
   #/ roughly 8 pixels of padding between them to prevent texture filtering and chromatic
   #/ aberration causing images to "leak" between the two eye views.
-  Hmd_GetFovTextureSize(Hmd, hmd, EyeType, eye, FovPort, fov, float, 
+  Hmd_GetFovTextureSize*(Hmd, hmd, EyeType, eye, FovPort, fov, float, 
                            pixelsPerDisplayPixel)
   #-------------------------------------------------------------------------------------
   # *****  Rendering API Thread Safety
@@ -513,14 +528,14 @@ when false:
   #/  - apiConfig provides D3D/OpenGL specific parameters. Pass null
   #/    to shutdown rendering and release all resources.
   #/  - distortionCaps describe desired distortion settings.
-  Hmd_ConfigureRendering(Hmd, hmd, `const`, 
+  Hmd_ConfigureRendering*(Hmd, hmd, `const`, 
                             RenderAPIConfig * apiConfig, unsigned, int, 
                             distortionCaps, `const`, FovPort, eyeFovIn[2], 
                             EyeRenderDesc, eyeRenderDescOut[2])
   #/ Begins a frame, returning timing information.
   #/ This should be called at the beginning of the game rendering loop (on the render thread).
   #/ Pass 0 for the frame index if not using ovrHmd_GetFrameTiming.
-  Hmd_BeginFrame(Hmd, hmd, unsigned, int, frameIndex)
+  Hmd_BeginFrame*(Hmd, hmd, unsigned, int, frameIndex)
   #/ Ends a frame, submitting the rendered textures to the frame buffer.
   #/ - RenderViewport within each eyeTexture can change per frame if necessary.
   #/ - 'renderPose' will typically be the value returned from ovrHmd_GetEyePoses
@@ -531,7 +546,7 @@ when false:
   #/ - If ovrDistortionCap_DepthProjectedTimeWarp is enabled, then app must provide eyeDepthTexture
   #/   and posTimewarpDesc. Otherwise both can be NULL.
   #/ - *** This Function will call Present/SwapBuffers and potentially wait for GPU Sync ***.
-  Hmd_EndFrame(Hmd, hmd, `const`, Posef, renderPose[2], `const`, 
+  Hmd_EndFrame*(Hmd, hmd, `const`, Posef, renderPose[2], `const`, 
                   Texture, eyeTexture[2])
   #/ Returns predicted head pose in outHmdTrackingState and offset eye poses in outEyePoses
   #/ as an atomic operation. Caller need not worry about applying HmdToEyeViewOffset to the
@@ -544,7 +559,7 @@ when false:
   #/ - If frameIndex is not being utilized, pass in 0.
   #/ - Assuming outEyePoses are used for rendering, it should be passed into ovrHmd_EndFrame.
   #/ - If caller doesn't need outHmdTrackingState, it can be passed in as NULL
-  Hmd_GetEyePoses(Hmd, hmd, unsigned, int, frameIndex, `const`, 
+  Hmd_GetEyePoses*(Hmd, hmd, unsigned, int, frameIndex, `const`, 
                      Vector3f, hmdToEyeViewOffset[2], Posef, 
                      outEyePoses[2], TrackingState * outHmdTrackingState)
   #/ Function was previously called ovrHmd_GetEyePose
@@ -553,7 +568,7 @@ when false:
   #/ - Must be called between ovrHmd_BeginFrameTiming and ovrHmd_EndFrameTiming.
   #/ - If returned pose is used for rendering the eye, it should be passed to ovrHmd_EndFrame.
   #/ - Parameter 'eye' is used internally for prediction timing only
-  Hmd_GetHmdPosePerEye(Hmd, hmd, EyeType, eye)
+  Hmd_GetHmdPosePerEye*(Hmd, hmd, EyeType, eye)
   #-------------------------------------------------------------------------------------
   # *****  Client Distortion Rendering Functions
   # These functions provide the distortion data and render timing support necessary to allow
@@ -573,7 +588,7 @@ when false:
   #/ Computes the distortion viewport, view adjust, and other rendering parameters for
   #/ the specified eye. This can be used instead of ovrHmd_ConfigureRendering to do
   #/ setup for client rendered distortion.
-  Hmd_GetRenderDesc(Hmd, hmd, EyeType, eyeType, FovPort, fov)
+  Hmd_GetRenderDesc*(Hmd, hmd, EyeType, eyeType, FovPort, fov)
   #/ Describes a vertex used by the distortion mesh. This is intended to be converted into
   #/ the engine-specific format. Some fields may be unused based on the ovrDistortionCaps
   #/ flags selected. TexG and TexB, for example, are not used if chromatic correction is
@@ -608,46 +623,46 @@ when false:
   #/ ovrDistortionMesh values will be set to null.
   #/ This is the only function in the SDK reliant on eye relief, currently imported from profiles,
   #/ or overridden here.
-  Hmd_CreateDistortionMesh(Hmd, hmd, EyeType, eyeType, FovPort, fov, 
+  Hmd_CreateDistortionMesh*(Hmd, hmd, EyeType, eyeType, FovPort, fov, 
                               unsigned, int, distortionCaps, 
                               DistortionMesh * meshData)
-  Hmd_CreateDistortionMeshDebug(Hmd, hmddesc, EyeType, eyeType, 
+  Hmd_CreateDistortionMeshDebug*(Hmd, hmddesc, EyeType, eyeType, 
                                    FovPort, fov, unsigned, int, 
                                    distortionCaps, DistortionMesh * meshData, 
                                    float, debugEyeReliefOverrideInMetres)
   #/ Used to free the distortion mesh allocated by ovrHmd_GenerateDistortionMesh. meshData elements
   #/ are set to null and zeroes after the call.
-  Hmd_DestroyDistortionMesh(DistortionMesh * meshData)
+  Hmd_DestroyDistortionMesh*(DistortionMesh * meshData)
   #/ Computes updated 'uvScaleOffsetOut' to be used with a distortion if render target size or
   #/ viewport changes after the fact. This can be used to adjust render size every frame if desired.
-  Hmd_GetRenderScaleAndOffset(FovPort, fov, Sizei, textureSize, 
+  Hmd_GetRenderScaleAndOffset*(FovPort, fov, Sizei, textureSize, 
                                  Recti, renderViewport, Vector2f, 
                                  uvScaleOffsetOut[2])
   #/ Thread-safe timing function for the main thread. Caller should increment frameIndex
   #/ with every frame and pass the index where applicable to functions called on the
   #/ rendering thread.
-  Hmd_GetFrameTiming(Hmd, hmd, unsigned, int, frameIndex)
+  Hmd_GetFrameTiming*(Hmd, hmd, unsigned, int, frameIndex)
   #/ Called at the beginning of the frame on the rendering thread.
   #/ Pass frameIndex == 0 if ovrHmd_GetFrameTiming isn't being used. Otherwise,
   #/ pass the same frame index as was used for GetFrameTiming on the main thread.
-  Hmd_BeginFrameTiming(Hmd, hmd, unsigned, int, frameIndex)
+  Hmd_BeginFrameTiming*(Hmd, hmd, unsigned, int, frameIndex)
   #/ Marks the end of client distortion rendered frame, tracking the necessary timing information.
   #/ This function must be called immediately after Present/SwapBuffers + GPU sync. GPU sync is
   #/ important before this call to reduce latency and ensure proper timing.
-  Hmd_EndFrameTiming(Hmd, hmd)
+  Hmd_EndFrameTiming*(Hmd, hmd)
   #/ Initializes and resets frame time tracking. This is typically not necessary, but
   #/ is helpful if game changes vsync state or video mode. vsync is assumed to be on if this
   #/ isn't called. Resets internal frame index to the specified number.
-  Hmd_ResetFrameTiming(Hmd, hmd, unsigned, int, frameIndex)
+  Hmd_ResetFrameTiming*(Hmd, hmd, unsigned, int, frameIndex)
   #/ Computes timewarp matrices used by distortion mesh shader, these are used to adjust
   #/ for head orientation change since the last call to ovrHmd_GetEyePoses
   #/ when rendering this eye. The ovrDistortionVertex::TimeWarpFactor is used to blend between the
   #/ matrices, usually representing two different sides of the screen.
   #/ Set 'calcPosition' to true when using depth based positional timewarp
   #/ Must be called on the same thread as ovrHmd_BeginFrameTiming.
-  Hmd_GetEyeTimewarpMatrices(Hmd, hmd, EyeType, eye, Posef, 
+  Hmd_GetEyeTimewarpMatrices*(Hmd, hmd, EyeType, eye, Posef, 
                                 renderPose, Matrix4f, twmOut[2])
-  Hmd_GetEyeTimewarpMatricesDebug(Hmd, hmddesc, EyeType, eye, Posef, 
+  Hmd_GetEyeTimewarpMatricesDebug*(Hmd, hmddesc, EyeType, eye, Posef, 
                                      renderPose, Quatf, playerTorsoMotion, 
                                      Matrix4f, twmOut[2], double, 
                                      debugTimingOffsetInSeconds)
@@ -655,19 +670,19 @@ when false:
   # ***** Stateless math setup functions
   #/ Returns global, absolute high-resolution time in seconds. This is the same
   #/ value as used in sensor messages.
-  _GetTimeInSeconds()
+  getTimeInSeconds*()
   # 
   # -----------------------------------------------------------------------------------
   # ***** Latency Test interface
   #/ Does latency test processing and returns 'TRUE' if specified rgb color should
   #/ be used to clear the screen.
-  Hmd_ProcessLatencyTest(Hmd, hmd, unsigned, char, rgbColorOut[3])
+  Hmd_ProcessLatencyTest*(Hmd, hmd, unsigned, char, rgbColorOut[3])
   #/ Returns non-null string once with latency test result, when it is available.
   #/ Buffer is valid until next call.
-  Hmd_GetLatencyTestResult(Hmd, hmd)
+  Hmd_GetLatencyTestResult*(Hmd, hmd)
   #/ Returns the latency testing color in rgbColorOut to render when using a DK2
   #/ Returns false if this feature is disabled or not-applicable (e.g. using a DK1)
-  Hmd_GetLatencyTest2DrawColor(Hmd, hmddesc, unsigned, char, 
+  Hmd_GetLatencyTest2DrawColor*(Hmd, hmddesc, unsigned, char, 
                                   rgbColorOut[3])
   #-------------------------------------------------------------------------------------
   # ***** Health and Safety Warning Display interface
@@ -701,7 +716,7 @@ when false:
   #/        <insert model into the scene that stays in front of the user>
   #/        HSWDisplayCurrentlyDisplayed = true;
   #/    }
-  Hmd_GetHSWDisplayState(Hmd, hmd, HSWDisplayState * hasWarningState)
+  Hmd_GetHSWDisplayState*(Hmd, hmd, HSWDisplayState * hasWarningState)
   #/ Requests a dismissal of the HSWDisplay at the earliest possible time, which may be seconds
   #/ into the future due to display longevity requirements.
   #/ Returns true if the display is valid, in which case the request can always be honored.
@@ -711,36 +726,36 @@ when false:
   #/        if (key == escape)
   #/            ovrhmd_DismissHSWDisplay(hmd);
   #/    }
-  Hmd_DismissHSWDisplay(Hmd, hmd)
+  Hmd_DismissHSWDisplay*(Hmd, hmd)
   #/ Get boolean property. Returns first element if property is a boolean array.
   #/ Returns defaultValue if property doesn't exist.
-  Hmd_GetBool(Hmd, hmd, `const`, char * propertyName, ovrBool, defaultVal)
+  Hmd_GetBool*(Hmd, hmd, `const`, char * propertyName, ovrBool, defaultVal)
   #/ Modify bool property; false if property doesn't exist or is readonly.
-  Hmd_SetBool(Hmd, hmd, `const`, char * propertyName, ovrBool, value)
+  Hmd_SetBool*(Hmd, hmd, `const`, char * propertyName, ovrBool, value)
   #/ Get integer property. Returns first element if property is an integer array.
   #/ Returns defaultValue if property doesn't exist.
-  Hmd_GetInt(Hmd, hmd, `const`, char * propertyName, int, defaultVal)
+  Hmd_GetInt*(Hmd, hmd, `const`, char * propertyName, int, defaultVal)
   #/ Modify integer property; false if property doesn't exist or is readonly.
-  Hmd_SetInt(Hmd, hmd, `const`, char * propertyName, int, value)
+  Hmd_SetInt*(Hmd, hmd, `const`, char * propertyName, int, value)
   #/ Get float property. Returns first element if property is a float array.
   #/ Returns defaultValue if property doesn't exist.
-  Hmd_GetFloat(Hmd, hmd, `const`, char * propertyName, float, defaultVal)
+  Hmd_GetFloat*(Hmd, hmd, `const`, char * propertyName, float, defaultVal)
   #/ Modify float property; false if property doesn't exist or is readonly.
-  Hmd_SetFloat(Hmd, hmd, `const`, char * propertyName, float, value)
+  Hmd_SetFloat*(Hmd, hmd, `const`, char * propertyName, float, value)
   #/ Get float[] property. Returns the number of elements filled in, 0 if property doesn't exist.
   #/ Maximum of arraySize elements will be written.
-  Hmd_GetFloatArray(Hmd, hmd, `const`, char * propertyName, 
+  Hmd_GetFloatArray*(Hmd, hmd, `const`, char * propertyName, 
                        float * values, unsigned, int, arraySize)
   #/ Modify float[] property; false if property doesn't exist or is readonly.
-  Hmd_SetFloatArray(Hmd, hmd, `const`, char * propertyName, 
+  Hmd_SetFloatArray*(Hmd, hmd, `const`, char * propertyName, 
                        float * values, unsigned, int, arraySize)
   #/ Get string property. Returns first element if property is a string array.
   #/ Returns defaultValue if property doesn't exist.
   #/ String memory is guaranteed to exist until next call to GetString or GetStringArray, or HMD is destroyed.
-  Hmd_GetString(Hmd, hmd, `const`, char * propertyName, `const`, 
+  Hmd_GetString*(Hmd, hmd, `const`, char * propertyName, `const`, 
                    char * defaultVal)
   #/ Set string property
-  Hmd_SetString(Hmd, hmddesc, `const`, char * propertyName, `const`, 
+  Hmd_SetString*(Hmd, hmddesc, `const`, char * propertyName, `const`, 
                    char * value)
   # 
   # -----------------------------------------------------------------------------------
@@ -748,12 +763,12 @@ when false:
   #/ Send a message string to the system tracing mechanism if enabled (currently Event Tracing for Windows)
   #/ Level is one of the ovrLogLevel constants.
   #/ returns the length of the message, or -1 if message is too large
-  _TraceMessage(int, level, `const`, char * message)
+  traceMessage*(int, level, `const`, char * message)
   # DEPRECATED: These functions are being phased out in favor of a more comprehensive logging system.
   # These functions will return false and do nothing.
-  Hmd_StartPerfLog(Hmd, hmd, `const`, char * fileName, `const`, 
+  Hmd_StartPerfLog*(Hmd, hmd, `const`, char * fileName, `const`, 
                       char * userData1)
-  Hmd_StopPerfLog(Hmd, hmd)
+  Hmd_StopPerfLog*(Hmd, hmd)
   # 
   # -----------------------------------------------------------------------------------
   # ***** Backward compatibility #includes
