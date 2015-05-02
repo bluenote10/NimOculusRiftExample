@@ -1,13 +1,13 @@
 
 import utils
 import glm
-import opengl
 from strutils import `%`, join
 import os
 
 import window
 import shader
 import ../bindings/ovr as ovr
+import opengl
 
 echo "\n *** ----------------- running -----------------"
 
@@ -32,8 +32,13 @@ block:
 
 
 var win = createWindow(100, 100, 800, 600)
+sleep(1000)
 
-shader.shaderProgramCreate("", "")
+#opengl.loadExtensions()
+
+
+
+var shaderProg = shader.shaderProgramCreate("", "")
 echo "returned from shaderProgramCreate"
 os.sleep(1000)
 

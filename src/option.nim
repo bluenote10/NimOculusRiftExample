@@ -40,6 +40,9 @@ proc some*[T](value: T): Option[T] =
   Option[T](kind: Some, value: value)
 
 
+#proc none*(T: typedesc): Option[T] = none[T]()
+
+  
 proc map*[T,S](o: Option[T], f: proc (x: T): S {.closure.}): Option[S] =
   case o.kind:
   of None: result = none[S]()
@@ -58,6 +61,10 @@ proc isEmpty*[T](o: Option[T]): bool =
   of None: true
   of Some: false
 
+
+template use*[T](o: Option[T], b: stmt): stmt =
+  if o.isDefined:
+    b
 
 runUnitTests:
   block:
