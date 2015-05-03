@@ -3,6 +3,7 @@ import opengl
 import os
 import utils
 import tables
+import glm
 
 type
   ShaderType = enum
@@ -159,6 +160,20 @@ proc shaderProgramCreate*(vsFile, fsFile: string): ShaderProg =
 
   raise newException(Exception, "Could not generate shader program")
   
-  
-#proc 
-  
+
+proc getUniformLocation  (sp: ShaderProg, name: string): int = sp.unifsMap[name]
+proc getAttributeLocation(sp: ShaderProg, name: string): int = sp.attrsMap[name]
+
+proc setUniform(sp: ShaderProg, loc: int, x: float) =
+  glUniform1f(loc.GLint, x)
+proc setUniform(sp: ShaderProg, loc: int, x, y: float) =
+  glUniform2f(loc.GLint, x, y)
+proc setUniform(sp: ShaderProg, loc: int, x, y, z: float) =
+  glUniform3f(loc.GLint, x, y, z)
+proc setUniform(sp: ShaderProg, loc: int, x, y, z, w: float) =
+  glUniform4f(loc.GLint, x, y, z, w)
+
+proc setUniform(sp: ShaderProg, loc: int, m: Mat3) =
+  #glUniformMatrix3fv(loc.GLint, 1, false, cast[ptr GLfloat](m.data.addr))
+  echo repr(addr(m))
+

@@ -1,3 +1,7 @@
+{.hint[Path]: off.}
+{.hint[Processing]: off.}
+{.hint[XDeclaredButNotUsed]: off.}
+#{.hint[Linking]: off.}
 
 import utils
 import glm
@@ -7,6 +11,7 @@ import os
 import window
 import shader
 import ../bindings/ovr as ovr
+
 
 echo "\n *** ----------------- running -----------------"
 

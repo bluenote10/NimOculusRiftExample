@@ -129,7 +129,8 @@ runUnitTests:
     let x = some(1)
     x.use((discard 1)):
       echo "value of x: ", x
-    if x ?= none[int]():
-      echo "value of y: ", x
+    if x ?= x:
+      echo "value of x: ", x
+    echo "value of x: ", x
     
 
