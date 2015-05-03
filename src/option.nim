@@ -36,11 +36,10 @@ proc `==`*[T](a: Option[T], b: Option[T]): bool =
 proc none*[T](): Option[T] =
   Option[T](kind: None)
 
+#proc none*(T: typedesc): Option[T] = none[T]()
+
 proc some*[T](value: T): Option[T] =
   Option[T](kind: Some, value: value)
-
-
-#proc none*(T: typedesc): Option[T] = none[T]()
 
   
 proc map*[T,S](o: Option[T], f: proc (x: T): S {.closure.}): Option[S] =
@@ -62,10 +61,24 @@ proc isEmpty*[T](o: Option[T]): bool =
   of Some: false
 
 
-template use*[T](o: Option[T], b: stmt): stmt =
+template use*[T](o: Option[T], b1: stmt, b2: stmt): stmt =
+  if o.isEmpty:
+    b1
+  else:
+    b2
+
+#template switch*[T](o: Option[T], b: stmt, b2: stmt): stmt =
+
+template whenDefined*[T](o: Option[T], b: stmt): stmt =
   if o.isDefined:
     b
 
+template `?=`*(into: expr, o: Option): bool =    
+  var into {.inject.}: type(o.value)
+  if o.isDefined:
+    into = o.value
+  o.isDefined
+    
 runUnitTests:
   block:
     var
@@ -111,4 +124,12 @@ runUnitTests:
     var uninit: Option[int]
     echo "Unitialized: ", uninit
     assert uninit.isEmpty
+
+  block:
+    let x = some(1)
+    x.use((discard 1)):
+      echo "value of x: ", x
+    if x ?= none[int]():
+      echo "value of y: ", x
+    
 

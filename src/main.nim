@@ -7,7 +7,6 @@ import os
 import window
 import shader
 import ../bindings/ovr as ovr
-import opengl
 
 echo "\n *** ----------------- running -----------------"
 
@@ -34,16 +33,14 @@ block:
 var win = createWindow(100, 100, 800, 600)
 sleep(1000)
 
-#opengl.loadExtensions()
 
 
-
-var shaderProg = shader.shaderProgramCreate("", "")
+var shaderProg = shader.shaderProgramCreate("shader/GaussianLighting.vs", "shader/GaussianLighting.fs")
 echo "returned from shaderProgramCreate"
-os.sleep(1000)
+#os.sleep(1000)
 
 
-echo "done"    
+echo "done"
     
 
 

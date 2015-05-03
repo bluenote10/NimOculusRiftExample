@@ -1,7 +1,8 @@
 
 import opengl
 import os
-import option
+import utils
+import tables
 
 type
   ShaderType = enum
@@ -37,6 +38,7 @@ proc compileShader(source: string, typ: ShaderType): Option[ShaderId] =
     var retInfoLog = newStringOfCap(logLen)
     var retLength: GLsizei
     glGetShaderInfoLog(shaderId, logLen.GLsizei, retLength.addr, retInfoLog)
+    retInfoLog.setlen(retLength)
 
     echo "Error compiling shader: ", retInfoLog
 
@@ -68,6 +70,7 @@ proc linkProgram(vsId, fsId: ShaderId): Option[ProgramId] =
     var retInfoLog = newStringOfCap(logLen)
     var retLength: GLsizei
     glGetProgramInfoLog(progId, logLen.GLsizei, retLength.addr, retInfoLog)
+    retInfoLog.setlen(retLength)
     return retInfoLog
     
   # link
@@ -91,26 +94,71 @@ proc linkProgram(vsId, fsId: ShaderId): Option[ProgramId] =
 
 
 type
+  LocationTable = Table[string, int]
+
   ShaderProg = object
     id: ProgramId
-    
+    numUnifs: int
+    numAttrs: int
+    unifsMap: LocationTable
+    attrsMap: LocationTable
+
+
 proc shaderProgramCreate*(vsFile, fsFile: string): ShaderProg =
 
-  let vsId = compileShader(vsFile, ShaderType.VertexShader)
-  let fsId = compileShader(fsFile, ShaderType.FragmentShader)
+  let contentVS = readFileOpt(vsFile)
+  let contentFS = readFileOpt(fsFile)
 
-  vsId.use:
-    echo "TEST"
+  if (contentVS ?= contentVS) and (contentFS ?= contentFS):
   
-  discard """
-  let id = linkProgram(vsFile, fsFile)
+    let vsId = compileShader(contentVS, ShaderType.VertexShader)
+    let fsId = compileShader(contentFS, ShaderType.FragmentShader)
 
-  if id.isEmpty:
-    raise newException("Could not generate shader program")
-  else:
-    #let id = id.get
-    discard
-  """
+    if (vsId ?= vsId) and (fsId ?= fsId):
+      let pId = linkProgram(vsId, fsId)
+
+      if pId ?= pId:
+
+        var numUnifsRaw: GLint
+        glGetProgramiv(pId, GL_ACTIVE_UNIFORMS, numUnifsRaw.addr)
+        var numAttrsRaw: GLint
+        glGetProgramiv(pId, GL_ACTIVE_ATTRIBUTES, numAttrsRaw.addr)
+        let numUnifs = numUnifsRaw.int
+        let numAttrs = numAttrsRaw.int
+        
+        proc extractUnif(i: int): (string,int) =
+          var name = newStringOfCap(1024)
+          var retLength: GLsizei
+          var retSizeOfUnif: GLint
+          var retTypeOfUnif: GLenum
+          glGetActiveUniform(pId, i.GLuint, 1024.GLsizei, retLength.addr, retSizeOfUnif.addr, retTypeOfUnif.addr, name)
+          name.setlen(retLength)
+          let loca = glGetUniformLocation(pId, name)
+          (name, loca.int)
+        
+        proc extractAttr(i: int): (string,int) =
+          var name = newStringOfCap(1024)
+          var retLength: GLsizei
+          var retSizeOfAttr: GLint
+          var retTypeOfAttr: GLenum
+          glGetActiveAttrib(pId, i.GLuint, 1024.GLsizei, retLength.addr, retSizeOfAttr.addr, retTypeOfAttr.addr, name)
+          name.setlen(retLength)
+          let loca = glGetAttribLocation(pId, name)
+          (name, loca.int)
+
+        let unifsMap = newSeqTabulate(numUnifs, (string,int), extractUnif(i)).toTable
+        let attrsMap = newSeqTabulate(numAttrs, (string,int), extractAttr(i)).toTable
+      
+        return ShaderProg(
+          id: pId,
+          numUnifs: numUnifs,
+          numAttrs: numAttrs,
+          unifsMap: unifsMap,
+          attrsMap: attrsMap,
+        )
+
+  raise newException(Exception, "Could not generate shader program")
   
-
+  
+#proc 
   

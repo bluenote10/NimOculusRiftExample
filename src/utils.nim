@@ -1,5 +1,6 @@
 
 from strutils import `%`, join
+#import option
 
 
 template filename: string =
@@ -17,34 +18,27 @@ template newSeqFill(len: int, init: expr): expr =
     result[i] = init
   result
 
+template newSeqTabulate*(len: int, typ, iter: expr): expr =
+  var result = newSeq[typ](len)
+  for ii in 0 .. <len:
+    let i {.inject.} = ii.int
+    result[i] = iter
+  result
+  
+  
+# ------------------------------------------------
+# Slice improvements
+# ------------------------------------------------
+  
 iterator items*[T](s: Slice[T]): T =
   for i in s.a .. s.b:
     yield i
-
-when false:
-  iterator enumerate*[T](iter: T): tuple[key: int, val: T] =
-    var i = 0
-    for x in iter:
-      yield (i, x)
-      inc i
-      
-    
-when false:    
-  iterator `..`*[S, T](a: S, b: T): tuple[key: int, val: T] {.inline.} =
-    ## An alias for `countup`.
-    var i = 0
-    var x = a
-    while x <= int(b):
-      yield (i, x)
-      inc i
-      inc x
     
 iterator pairs*[T](s: Slice[T]): tuple[key: int, val: T] {.inline.} =
   var i = 0
   for x in s.a .. s.b:
     yield (i, x)
     inc i
-    
     
 template toArray[T](slice: Slice[T]): expr =
   var result: array[slice.b-slice.a+1, slice.T]
@@ -53,35 +47,22 @@ template toArray[T](slice: Slice[T]): expr =
     result[i] = x
   result
 
-var arr = (1..10).toArray
-echo repr(arr)
 
+# ------------------------------------------------
+# IO
+# ------------------------------------------------
+
+include option
+
+
+proc readFileOpt*(filename: string): Option[string] =
+  try:
+    let s = readFile(filename)
+    some(s)
+  except IOError:
+    none[string]()
   
-#proc printf*(formatstr: cstring) {.header: "<stdio.h>", varargs.}
-proc printf(formatstr: cstring) {.header: "<stdio.h>", importc: "printf", varargs.}
-
-proc sprintf(buffer: cstring, formatstr: cstring) {.header: "<stdio.h>", varargs.}
-
-proc snprintf(buffer: cstring, size: int, formatstr: cstring) {.header: "<stdio.h>", varargs.}
-
-when true:
-  #var x = (0..10).map(proc (i: int): int = i+1)
-  var bufferSize = 512
-  #var buffer = newSeqFill(bufferSize, " ").join
-  var buffer = newStringOfCap(bufferSize)
-  snprintf(buffer, bufferSize, "%.2f %3d %-5s\n", 1.0, 2, "3")
-  echo buffer
-
-when false:
-  #printf("Hello Word %d %d %s\n", 1, 2, "3")
-  #printf("%.2f %3d %-5s\n", 1.0, 2, "3")
-  var buffer = "                              "
-  sprintf(buffer, "%.2f %3d %-5s\n", 1.0, 2, "3")
-  echo buffer
-
-import typetraits
-echo ( .. <10)
-
+  
 
 runUnitTests():
   #var s = sprintf(".2f %3d %-5s", 1, 2, "3")

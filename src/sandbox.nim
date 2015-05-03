@@ -67,3 +67,45 @@ when true:
     
   #for x in i1():
   #  echo x
+
+
+
+#proc printf*(formatstr: cstring) {.header: "<stdio.h>", varargs.}
+proc printf(formatstr: cstring) {.header: "<stdio.h>", importc: "printf", varargs.}
+
+proc sprintf(buffer: cstring, formatstr: cstring) {.header: "<stdio.h>", varargs.}
+
+proc snprintf(buffer: cstring, size: int, formatstr: cstring) {.header: "<stdio.h>", varargs.}
+
+when true:
+  #var x = (0..10).map(proc (i: int): int = i+1)
+  var bufferSize = 512
+  #var buffer = newSeqFill(bufferSize, " ").join
+  var buffer = newStringOfCap(bufferSize)
+  snprintf(buffer, bufferSize, "%.2f %3d %-5s\n", 1.0, 2, "3")
+  echo buffer
+
+when false:
+  #printf("Hello Word %d %d %s\n", 1, 2, "3")
+  #printf("%.2f %3d %-5s\n", 1.0, 2, "3")
+  var buffer = "                              "
+  sprintf(buffer, "%.2f %3d %-5s\n", 1.0, 2, "3")
+  echo buffer
+
+when false:    
+  iterator `..`*[S, T](a: S, b: T): tuple[key: int, val: T] {.inline.} =
+    ## An alias for `countup`.
+    var i = 0
+    var x = a
+    while x <= int(b):
+      yield (i, x)
+      inc i
+      inc x
+
+when false:
+  iterator enumerate*[T](iter: T): tuple[key: int, val: T] =
+    var i = 0
+    for x in iter:
+      yield (i, x)
+      inc i
+  
