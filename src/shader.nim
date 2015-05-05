@@ -173,7 +173,24 @@ proc setUniform(sp: ShaderProg, loc: int, x, y, z: float) =
 proc setUniform(sp: ShaderProg, loc: int, x, y, z, w: float) =
   glUniform4f(loc.GLint, x, y, z, w)
 
+
+proc setUniform(sp: ShaderProg, loc: int, v: Vec3) =
+  glUniform3f(loc.GLint, v.x, v.y, v.z)
+proc setUniform(sp: ShaderProg, loc: int, v: Vec4) =
+  glUniform4f(loc.GLint, v.x, v.y, v.z, v.w)
+
+  
 proc setUniform(sp: ShaderProg, loc: int, m: Mat3) =
-  #glUniformMatrix3fv(loc.GLint, 1, false, cast[ptr GLfloat](m.data.addr))
-  echo repr(addr(m))
+  var data = m.getData
+  glUniformMatrix3fv(loc.GLint, 1, false, cast[ptr GLfloat](data.addr))
+
+proc setUniform(sp: ShaderProg, loc: int, m: var Mat3) =
+  glUniformMatrix3fv(loc.GLint, 1, false, cast[ptr GLfloat](m.addr))
+  
+proc setUniform(sp: ShaderProg, loc: int, m: Mat4) =
+  var data = m.getData
+  glUniformMatrix4fv(loc.GLint, 1, false, cast[ptr GLfloat](data.addr))
+
+proc setUniform(sp: ShaderProg, loc: int, m: var Mat4) =
+  glUniformMatrix4fv(loc.GLint, 1, false, cast[ptr GLfloat](m.addr))
 

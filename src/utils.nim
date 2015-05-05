@@ -6,10 +6,18 @@ from strutils import `%`, join
 template filename: string =
   instantiationInfo().filename
 
-template runUnitTests*(code: stmt): stmt =
+
+template runUnitTest*(name: string, code: stmt): stmt {.immediate.} =
+  when defined(testing):
+    echo " *** Running unit test: " & name
+    block:
+      code
+  
+template runUnitTests*(code: stmt): stmt {.immediate.} =
   when defined(testing):
     echo " *** Running units test in " & instantiationInfo().filename
-    code
+    block:
+      code
 
     
 template newSeqFill(len: int, init: expr): expr =

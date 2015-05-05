@@ -14,6 +14,7 @@ import ../bindings/ovr as ovr
 
 
 echo "\n *** ----------------- running -----------------"
+quit()
 
 proc callback(level: cint; message: cstring) {.cdecl.} =
   echo "Log: " & $level & $message
@@ -33,7 +34,6 @@ block:
 
   var hmd = ovr.hmdCreate(index-1)
   echo "hmd: ", hmd.repr
-
 
 var win = createWindow(100, 100, 800, 600)
 sleep(1000)
