@@ -5,11 +5,11 @@ type
 
 proc nVec4*(x, y, z, w: float): Vec4 = Vec4(x: x, y: y, z: z, w: w)   
 
-## scalar operators
+# scalar operators
 proc `*`*(v: Vec4, a: float): Vec4 = nVec4(v.x*a, v.y*a, v.z*a, v.w*a)
 proc `/`*(v: Vec4, a: float): Vec4 = nVec4(v.x/a, v.y/a, v.z/a, v.w/a)
 
-## vector-vector operators
+# vector-vector operators
 proc `+`*(v1: Vec4, v2: Vec4): Vec4 = nVec4(v1.x+v2.x, v1.y+v2.y, v1.z+v2.z, v1.w+v2.w)
 proc `-`*(v1: Vec4, v2: Vec4): Vec4 = nVec4(v1.x-v2.x, v1.y-v2.y, v1.z-v2.z, v1.w-v2.w)
 

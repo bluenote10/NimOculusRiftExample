@@ -24,16 +24,39 @@ proc `*`(this: Mat3, that: Mat3): Mat3 =
 proc `$` *(m: Mat3): string =
   "Mat3($#)" % m.data.map(proc (x: float): string = $x).join(", ")
 
-proc mat3CreateIdentity*(): Mat3 =
-  result = Mat3(data: [1.0,0.0,0.0, 0.0,1.0,0.0, 0.0,0.0,1.0])
-
 proc getData*(m: Mat3): array[9, float] = m.data
+
+# Constructors
+proc nMat3(m00, m01, m02,
+           m10, m11, m12,
+           m20, m21, m22: float): Mat3 =
+  ## arguments are row-major to simplify construction
+  ## convert to a column-major format for internal storage.
+  Mat3(data: [
+    m00, m10, m20,
+    m01, m11, m21,
+    m02, m12, m22
+  ])
   
+proc nMat3Identity*(): Mat3 =
+  nMat3(
+    1, 0, 0,
+    0, 1, 0,
+    0, 0, 1
+  )
+
+proc nMat3Zero*(): Mat3 =
+  nMat3(
+    0, 0, 0,
+    0, 0, 0,
+    0, 0, 0
+  )
+
 
 runUnitTests:
   var
-    m = mat3CreateIdentity()
-    o = mat3CreateIdentity()
+    m = nMat3Identity()
+    o = nMat3Identity()
 
   echo m, m[0,0], m*o
 

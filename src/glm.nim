@@ -8,3 +8,5 @@ include glm_vec4
 
 include glm_mat3
 include glm_mat4
+
+include glm_quat
