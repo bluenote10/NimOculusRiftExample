@@ -10,6 +10,7 @@ import os
 
 import window
 import shader
+import vbo
 import ../bindings/ovr as ovr
 
 
