@@ -5,11 +5,16 @@ export opengl.GLuint
 #import future
 import utils
 
+
 proc glGenVertexArrays*(): GLuint =
   var vao: GLuint
   glGenVertexArrays(1.GLsizei, vao.addr)
   vao
 
+proc glGenBuffers*(): GLuint =
+  var id: GLuint
+  glGenBuffers(1.GLsizei, id.addr)
+  id
 
 
 type
@@ -19,6 +24,8 @@ type
 
   Default = object
   Switchable = object
+
+  GlWrapper* = object
   
     
 proc get*[T,X](sw: StateWrapper[T,X]): Option[T] =
@@ -46,13 +53,17 @@ proc depthTestChanger(x: bool) =
   if x: glEnable(GL_DEPTH_TEST)
   else: glDisable(GL_DEPTH_TEST)
 
-var DepthTest* = defineStateWrapper[bool,Switchable](depthTestChanger)
+var depthTestVar = defineStateWrapper[bool,Switchable](depthTestChanger)
+
+proc DepthTest*(T: typedesc[GlWrapper]): var StateWrapper[bool,Switchable] = depthTestVar
 
 
 # vertex array object
 proc vaoChanger(vao: GLuint) =
   glBindVertexArray(vao)
 
-var VertexArrayObject* = defineStateWrapper[GLuint,Default](vaoChanger)
+var vertexArrayObjectVar = defineStateWrapper[GLuint,Default](vaoChanger)
+
+proc VertexArrayObject*(T: typedesc[GlWrapper]): var StateWrapper[GLuint,Default] = vertexArrayObjectVar
 
 

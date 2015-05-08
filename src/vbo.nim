@@ -1,6 +1,6 @@
 
 import wrapgl
-#import opengl
+import opengl
 
 type
   StaticVbo*[VertexData, Shader] = object
@@ -11,10 +11,41 @@ type
 
 proc initStaticVbo[VertexData, Shader](vd: VertexData, shader: Shader): StaticVbo[VertexData, Shader] =
 
+  # initialize a VAO and bind it
   let vao = glGenVertexArrays()
-  VertexArrayObject.set(vao)
-  
+  GlWrapper.VertexArrayObject.set(vao)
+
+  # initialize the VBO and bind it
+  let vbId = glGenBuffers()
+  glBindBuffer(GL_ARRAY_BUFFER, vbId)
+
+  # make the attribute bindings
+  # that is where the association between the VAO and the current GL_ARRAY_BUFFER is evaluated and stored
+  #shader.setVertexAttribArrayAndPointer(vd)
+
+  # buffer the static vertex data
+  echo vd.addr
+  #glBufferData(GL_ARRAY_BUFFER, vd.addr, GL_STATIC_DRAW)
+
   StaticVbo[VertexData, Shader](vd: vd, shader: shader, vao: vao)
 
 
-let x = initStaticVbo(1,1)
+
+type
+  VertexData = ref VertexDataObj
+
+  VertexDataObj = object
+    data: seq[float]
+
+
+type
+  DefaultLightingShader = object
+
+proc setVertexAttribArrayAndPointer(s: DefaultLightingShader, vd: VertexData) =
+  echo "Test"
+
+var vd = VertexData.new
+vd.data = @[0.0]
+var shader = DefaultLightingShader()
+
+let x = initStaticVbo(vd, DefaultLightingShader)
