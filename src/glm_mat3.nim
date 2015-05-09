@@ -11,7 +11,7 @@ proc `[]`*(m: Mat3, i, j: Mat3Index): float =
 proc `[]=`*(m: var Mat3, i, j: Mat3Index, x: float) =
   m.data[j*3 + i] = x
   
-proc `*`(this: Mat3, that: Mat3): Mat3 =
+proc `*`*(this: Mat3, that: Mat3): Mat3 =
   #var data = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
   #result = Mat3(data: data)
   for i in 0 .. <3:
@@ -21,7 +21,7 @@ proc `*`(this: Mat3, that: Mat3): Mat3 =
         #result[i,j] += this[i,k] * that[k,j]
   
 
-proc `$` *(m: Mat3): string =
+proc `$`*(m: Mat3): string =
   "Mat3($#)" % m.data.map(proc (x: float): string = $x).join(", ")
 
 proc getData*(m: Mat3): array[9, float] = m.data

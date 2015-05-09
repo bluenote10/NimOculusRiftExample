@@ -38,7 +38,7 @@ else:
 type 
   ovrBool* = cchar
   uint32_t = uint32
-  uintptr_t = ptr uint
+  uintptr_t* = ptr uint
 
 proc toBool*(ob: ovrBool): bool =
   if ob == char(0): false else: true
@@ -462,6 +462,24 @@ proc hmdGetEnabledCaps*(hmd: Hmd): cuint
 proc hmdSetEnabledCaps*(hmd: Hmd, hmdCaps: cuint)
   {.cdecl, importc: "ovrHmd_SetEnabledCaps", dynlib: libname.}
 
+
+
+#-------------------------------------------------------------------------------------
+# Manually added from OVR_CAPI_Util.h
+  
+type 
+  ProjectionModifier* {.size: sizeof(cint).} = enum
+    Projection_None = 0x00,
+    Projection_RightHanded = 0x01,
+    Projection_FarLessThanNear = 0x02,
+    Projection_FarClipAtInfinity = 0x04,
+    Projection_ClipRangeOpenGL = 0x08,
+  
+
+proc Matrix4f_Projection*(fov: FovPort, znear: cfloat, zfar: cfloat, projectionModFlags: ProjectionModifier): Matrix4f
+  {.cdecl, importc: "ovrMatrix4f_Projection", dynlib: libname.}
+
+  
 when false:
     
   #-------------------------------------------------------------------------------------
@@ -776,3 +794,8 @@ when false:
   # This is at the bottom of this file because the following is dependent on the 
   # declarations above. 
   ##ifndef C2NIM
+
+
+
+
+  

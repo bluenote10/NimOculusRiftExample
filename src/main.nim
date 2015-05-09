@@ -12,36 +12,21 @@ import window
 import shaders
 import vbos
 import vertexdata
-import ../bindings/ovr as ovr
 #import opengl
 import wrapgl
 import framebuffer
+import ovrwrapper as ovrwrappermodule
 
 echo "\n *** ----------------- running -----------------"
 var vd = vdGenEmpty()
 var shader = DefaultLightingShader()
 
-let x = initStaticVbo(vd, shader)
-quit()
+#let x = initStaticVbo(vd, shader)
+#quit()
 
-proc callback(level: cint; message: cstring) {.cdecl.} =
-  echo "Log: " & $level & $message
-
-var initParams: ovr.InitParams
-initParams.Flags = Init_Debug
-initParams.LogCallback = callback
-echo repr(initParams)
-
-block:
-  var success = ovr.initialize(initParams.addr).toBool
-  echo "result: " & $success
-
-block:
-  var index = ovr.hmdDetect()
-  echo "index: ", index
-
-  var hmd = ovr.hmdCreate(index-1)
-  echo "hmd: ", hmd.repr
+let hmd = initHmdInstance()
+let ovrWrapper = initOvrWrapper(hmd)
+quit 0
 
 var win = createWindow(100, 100, 800, 600)
 sleep(1000)

@@ -35,6 +35,9 @@ proc initFramebufferTexture*(w: int, h: int): FramebufferTexture =
   # attach renderbuffer to FBO
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBufferId)
 
+  # unbind
+  glBindFramebuffer(GL_FRAMEBUFFER, 0)
+  
   FramebufferTexture(w: w, h: h, id: framebufferId)
   
 proc activate*(fb: FramebufferTexture) =
