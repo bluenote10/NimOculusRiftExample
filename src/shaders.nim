@@ -167,7 +167,9 @@ proc shaderProgramCreate*(filenameBase: string): ShaderProg =
   ## overloaded version which assumes the vs/fs have the same base name
   shaderProgramCreate(filenameBase & ".vs", filenameBase & ".fs")
 
-  
+proc use(sp: ShaderProg) =
+  GlWrapper.Program.set(sp.id)
+
 proc getUniformLocation  (sp: ShaderProg, name: string): int = sp.unifsMap[name]
 proc getAttributeLocation(sp: ShaderProg, name: string): int = sp.attrsMap[name]
 
@@ -252,5 +254,16 @@ proc setVertexAttribArrayAndPointer*(s: DefaultLightingShader, vd: VertexData) =
     glVertexAttribPointer(s.attrLocColor,  4, cGL_FLOAT, false, vd.strideInBytes, vaOffsetColor)
   except KeyError:
     quit "vertex data does not provide necessary vertex information: " & $vd.vaOffsets
+
+
+proc setProjection*(s: DefaultLightingShader, P: Mat4) =
+  s.prog.use()
+  s.prog.setUniform(s.unifLocCameraToClipMatrix, P)
+
+proc setModelview*(s: DefaultLightingShader, V: Mat4, Vinvopt: Option[Mat4] = none[Mat4]()) =
+  let Vinv = Vinvopt.getOrElse(V) # TODO: .inv.transpose
+  s.prog.use()
+  s.prog.setUniform(s.unifLocModelToCameraMatrix, V)
+  s.prog.setUniform(s.unifLocNormalModelToCameraMatrix, Vinv)
 
   

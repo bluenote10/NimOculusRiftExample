@@ -14,6 +14,8 @@ import vbos
 import vertexdata
 import ../bindings/ovr as ovr
 #import opengl
+import wrapgl
+import framebuffer
 
 echo "\n *** ----------------- running -----------------"
 var vd = vdGenEmpty()

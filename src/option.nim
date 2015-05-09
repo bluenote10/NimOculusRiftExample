@@ -60,7 +60,12 @@ proc isEmpty*[T](o: Option[T]): bool =
   of None: true
   of Some: false
 
-
+proc getOrElse*[T](o: Option[T], x: T): T =
+  if o.isDefined:
+    o.value
+  else:
+    x
+  
 template use*[T](o: Option[T], b1: stmt, b2: stmt): stmt =
   if o.isEmpty:
     b1

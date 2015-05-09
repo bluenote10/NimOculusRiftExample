@@ -16,10 +16,32 @@ proc glGenBuffers*(): GLuint {.inline.} =
   glGenBuffers(1.GLsizei, id.addr)
   id
 
+proc glGenFrameBuffers*(): GLuint {.inline.} =
+  var id: GLuint
+  glGenFrameBuffers(1.GLsizei, id.addr)
+  id
+  
+proc glGenTextures*(): GLuint {.inline.} =
+  var id: GLuint
+  glGenTextures(1.GLsizei, id.addr)
+  id
+
+proc glGenRenderbuffers*(): GLuint {.inline.} =
+  var id: GLuint
+  glGenRenderbuffers(1.GLsizei, id.addr)
+  id
+
+proc glDrawBuffers*(buf: GLenum) {.inline.} =
+  var tmp = buf
+  glDrawBuffers(1.GLsizei, tmp.addr)
+  
 proc glVertexAttribPointer*(index: int, size: int, `type`: int, normalized: bool, stride: int, offset: int) {.inline.} =
   var tmpOffset = offset
   glVertexAttribPointer(index.GLuint, size.GLint, `type`.GLenum, normalized.GLboolean, stride.GLsizei, tmpOffset.addr)
-  
+
+proc glTexImage2D*(target: int, level: int, internalformat: int, width: int, height: int, border: int, format: int, `type`: int, pixels: pointer) =
+  glTexImage2D(target.GLenum, level.GLint, internalformat.GLint, width.GLsizei, height.GLsizei, border.GLint, format.GLenum, `type`.GLenum, pixels)  
+
 type
   StateWrapper[T,X] = object
     lastState: Option[T]
@@ -59,6 +81,15 @@ proc depthTestChanger(x: bool) =
 var depthTestVar = defineStateWrapper[bool,Switchable](depthTestChanger)
 
 proc DepthTest*(T: typedesc[GlWrapper]): var StateWrapper[bool,Switchable] = depthTestVar
+
+
+# shader program
+proc shaderChanger(id: GLuint) =
+  glUseProgram(id)
+
+var vertexShaderProgVar = defineStateWrapper[GLuint,Default](shaderChanger)
+
+proc Program*(T: typedesc[GlWrapper]): var StateWrapper[GLuint,Default] = vertexShaderProgVar
 
 
 # vertex array object
