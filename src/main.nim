@@ -9,12 +9,17 @@ from strutils import `%`, join
 import os
 
 import window
-import shader
-import vbo
+import shaders
+import vbos
+import vertexdata
 import ../bindings/ovr as ovr
-
+#import opengl
 
 echo "\n *** ----------------- running -----------------"
+var vd = vdGenEmpty()
+var shader = DefaultLightingShader()
+
+let x = initStaticVbo(vd, shader)
 quit()
 
 proc callback(level: cint; message: cstring) {.cdecl.} =
@@ -41,7 +46,7 @@ sleep(1000)
 
 
 
-var shaderProg = shader.shaderProgramCreate("shader/GaussianLighting.vs", "shader/GaussianLighting.fs")
+var shaderProg = shaderProgramCreate("shader/GaussianLighting.vs", "shader/GaussianLighting.fs")
 echo "returned from shaderProgramCreate"
 #os.sleep(1000)
 

@@ -1,9 +1,11 @@
 
 import opengl
+import wrapgl
 import os
 import utils
 import tables
 import glm
+import vertexdata
 
 type
   ShaderType = enum
@@ -161,6 +163,11 @@ proc shaderProgramCreate*(vsFile, fsFile: string): ShaderProg =
   raise newException(Exception, "Could not generate shader program")
   
 
+proc shaderProgramCreate*(filenameBase: string): ShaderProg =
+  ## overloaded version which assumes the vs/fs have the same base name
+  shaderProgramCreate(filenameBase & ".vs", filenameBase & ".fs")
+
+  
 proc getUniformLocation  (sp: ShaderProg, name: string): int = sp.unifsMap[name]
 proc getAttributeLocation(sp: ShaderProg, name: string): int = sp.attrsMap[name]
 
@@ -194,3 +201,56 @@ proc setUniform(sp: ShaderProg, loc: int, m: Mat4) =
 proc setUniform(sp: ShaderProg, loc: int, m: var Mat4) =
   glUniformMatrix4fv(loc.GLint, 1, false, cast[ptr GLfloat](m.addr))
 
+
+
+
+type
+  DefaultLightingShader* = object
+    prog: ShaderProg
+    attrLocPos3D: int
+    attrLocNormal: int
+    attrLocColor: int
+    unifLocCameraToClipMatrix: int
+    unifLocModelToCameraMatrix: int
+    unifLocNormalModelToCameraMatrix: int
+    unifLocCameraSpaceLightPos1: int 
+
+proc initDefaultLightingShader*(filenameBase: string): DefaultLightingShader =
+  let prog = shaderProgramCreate(filenameBase)
+
+  let attrLocPos3D  = prog.getAttributeLocation("position")
+  let attrLocNormal = prog.getAttributeLocation("normal")
+  let attrLocColor  = prog.getAttributeLocation("inDiffuseColor")
+
+  let unifLocCameraToClipMatrix        = prog.getUniformLocation("cameraToClipMatrix")
+  let unifLocModelToCameraMatrix       = prog.getUniformLocation("modelToCameraMatrix")
+  let unifLocNormalModelToCameraMatrix = prog.getUniformLocation("normalModelToCameraMatrix")
+  let unifLocCameraSpaceLightPos1      = prog.getUniformLocation("cameraSpaceLightPos")
+  
+  DefaultLightingShader(
+    prog: prog,
+    attrLocPos3D: attrLocPos3D,
+    attrLocNormal: attrLocNormal,
+    attrLocColor: attrLocColor,
+    unifLocCameraToClipMatrix: unifLocCameraToClipMatrix,
+    unifLocModelToCameraMatrix: unifLocModelToCameraMatrix,
+    unifLocNormalModelToCameraMatrix: unifLocNormalModelToCameraMatrix,
+    unifLocCameraSpaceLightPos1: unifLocCameraSpaceLightPos1
+  )
+
+proc setVertexAttribArrayAndPointer*(s: DefaultLightingShader, vd: VertexData) =
+  try:
+    let vaOffsetPos3D  = vd.vaOffsets[vaHasPos3D]
+    let vaOffsetNormal = vd.vaOffsets[vaHasNormal]
+    let vaOffsetColor  = vd.vaOffsets[vaHasColor]
+    glEnableVertexAttribArray(s.attrLocPos3D.GLuint)
+    glEnableVertexAttribArray(s.attrLocNormal.GLuint)
+    glEnableVertexAttribArray(s.attrLocColor.GLuint)
+    #GlWrapper.checkGlError("after enabling vertex attrib array")
+    glVertexAttribPointer(s.attrLocPos3D,  3, cGL_FLOAT, false, vd.strideInBytes, vaOffsetPos3D)
+    glVertexAttribPointer(s.attrLocNormal, 3, cGL_FLOAT, false, vd.strideInBytes, vaOffsetNormal)
+    glVertexAttribPointer(s.attrLocColor,  4, cGL_FLOAT, false, vd.strideInBytes, vaOffsetColor)
+  except KeyError:
+    quit "vertex data does not provide necessary vertex information: " & $vd.vaOffsets
+
+  

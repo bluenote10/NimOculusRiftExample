@@ -6,17 +6,20 @@ export opengl.GLuint
 import utils
 
 
-proc glGenVertexArrays*(): GLuint =
+proc glGenVertexArrays*(): GLuint {.inline.} =
   var vao: GLuint
   glGenVertexArrays(1.GLsizei, vao.addr)
   vao
 
-proc glGenBuffers*(): GLuint =
+proc glGenBuffers*(): GLuint {.inline.} =
   var id: GLuint
   glGenBuffers(1.GLsizei, id.addr)
   id
 
-
+proc glVertexAttribPointer*(index: int, size: int, `type`: int, normalized: bool, stride: int, offset: int) {.inline.} =
+  var tmpOffset = offset
+  glVertexAttribPointer(index.GLuint, size.GLint, `type`.GLenum, normalized.GLboolean, stride.GLsizei, tmpOffset.addr)
+  
 type
   StateWrapper[T,X] = object
     lastState: Option[T]
