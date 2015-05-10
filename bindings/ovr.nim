@@ -314,7 +314,7 @@ type
     RenderAPI_D3D10,     # Deprecated: Not supported for SDK rendering
     RenderAPI_D3D11,
     RenderAPI_Count,
-    RenderAPI_EnumSize = 0x7FFFFFFF
+    #RenderAPI_EnumSize = 0x7FFFFFFF
 
 # Platform-independent part of rendering API-configuration data.
 # It is a part of ovrRenderAPIConfig, passed to ovrHmd_Configure.
@@ -442,85 +442,43 @@ proc hmdDetect*(): cint
 proc hmdCreate*(index: cint): Hmd
   {.cdecl, importc: "ovrHmd_Create", dynlib: libname.}
 
-proc hmdDestroy*(hmd: Hmd)
-  {.cdecl, importc: "ovrHmd_Destroy", dynlib: libname.}
-
 proc hmdCreateDebug*(`type`: HmdType): Hmd
   {.cdecl, importc: "ovrHmd_CreateDebug", dynlib: libname.}
 
-proc hmdGetLastError*(hmd: Hmd): cstring
+
+
+proc destroy*(hmd: Hmd)
+  {.cdecl, importc: "ovrHmd_Destroy", dynlib: libname.}
+  
+proc getLastError*(hmd: Hmd): cstring
   {.cdecl, importc: "ovrHmd_GetLastError", dynlib: libname.}
 
-proc hmdAttachToWindow*(hmd: Hmd,
-                         window: pointer, 
-                         destMirrorRect: ptr Recti, 
-                         sourceRenderTargetRect: ptr Recti): ovrBool
+proc attachToWindow*(hmd: Hmd,
+                     window: pointer, 
+                     destMirrorRect: ptr Recti, 
+                     sourceRenderTargetRect: ptr Recti): ovrBool
   {.cdecl, importc: "ovrHmd_AttachToWindow", dynlib: libname.}
 
-proc hmdGetEnabledCaps*(hmd: Hmd): cuint
+proc getEnabledCaps*(hmd: Hmd): cuint
   {.cdecl, importc: "ovrHmd_GetEnabledCaps", dynlib: libname.}
-proc hmdSetEnabledCaps*(hmd: Hmd, hmdCaps: cuint)
+proc setEnabledCaps*(hmd: Hmd, hmdCaps: cuint)
   {.cdecl, importc: "ovrHmd_SetEnabledCaps", dynlib: libname.}
 
-
-
-#-------------------------------------------------------------------------------------
-# Manually added from OVR_CAPI_Util.h
-  
-type 
-  ProjectionModifier* {.size: sizeof(cint).} = enum
-    Projection_None = 0x00,
-    Projection_RightHanded = 0x01,
-    Projection_FarLessThanNear = 0x02,
-    Projection_FarClipAtInfinity = 0x04,
-    Projection_ClipRangeOpenGL = 0x08,
-  
-
-proc Matrix4f_Projection*(fov: FovPort, znear: cfloat, zfar: cfloat, projectionModFlags: ProjectionModifier): Matrix4f
-  {.cdecl, importc: "ovrMatrix4f_Projection", dynlib: libname.}
-
-  
-when false:
     
-  #-------------------------------------------------------------------------------------
-  # ***** Tracking Interface
-  #/ All tracking interface functions are thread-safe, allowing tracking state to be sampled
-  #/ from different threads.
-  #/ ConfigureTracking starts sensor sampling, enabling specified capabilities,
-  #/    described by ovrTrackingCaps.
-  #/  - supportedTrackingCaps specifies support that is requested. The function will succeed
-  #/   even if these caps are not available (i.e. sensor or camera is unplugged). Support
-  #/    will automatically be enabled if such device is plugged in later. Software should
-  #/    check ovrTrackingState.StatusFlags for real-time status.
-  #/  - requiredTrackingCaps specify sensor capabilities required at the time of the call.
-  #/    If they are not available, the function will fail. Pass 0 if only specifying
-  #/    supportedTrackingCaps.
-  #/  - Pass 0 for both supportedTrackingCaps and requiredTrackingCaps to disable tracking.
-  Hmd_ConfigureTracking*(Hmd, hmd, unsigned, int, supportedTrackingCaps, 
-                           unsigned, int, requiredTrackingCaps)
-  #/ Re-centers the sensor orientation.
-  #/ Normally this will recenter the (x,y,z) translational components and the yaw
-  #/ component of orientation.
-  Hmd_RecenterPose*(Hmd, hmd)
-  #/ Returns tracking state reading based on the specified absolute system time.
-  #/ Pass an absTime value of 0.0 to request the most recent sensor reading. In this case
-  #/ both PredictedPose and SamplePose will have the same value.
-  #/ ovrHmd_GetEyePoses relies on a valid ovrTrackingState.
-  #/ This may also be used for more refined timing of FrontBuffer rendering logic, etc.
-  Hmd_GetTrackingState*(Hmd, hmd, double, absTime)
-  #-------------------------------------------------------------------------------------
-  # ***** Graphics Setup
-  #/ Calculates the recommended viewport size for rendering a given eye within the HMD
-  #/ with a given FOV cone. Higher FOV will generally require larger textures to
-  #/ maintain quality.
-  #/  - pixelsPerDisplayPixel specifies the ratio of the number of render target pixels
-  #/    to display pixels at the center of distortion. 1.0 is the default value. Lower
-  #/    values can improve performance, higher values give improved quality.
-  #/ Apps packing multiple eye views together on the same textue should ensure there is
-  #/ roughly 8 pixels of padding between them to prevent texture filtering and chromatic
-  #/ aberration causing images to "leak" between the two eye views.
-  Hmd_GetFovTextureSize*(Hmd, hmd, EyeType, eye, FovPort, fov, float, 
-                           pixelsPerDisplayPixel)
+proc configureTracking*(hmd: Hmd, supportedTrackingCaps: TrackingCaps, requiredTrackingCaps: TrackingCaps): ovrBool
+  {.cdecl, importc: "ovrHmd_ConfigureTracking", dynlib: libname.}
+
+proc recenterPose*(hmd: Hmd)
+  {.cdecl, importc: "ovrHmd_RecenterPose", dynlib: libname.}
+
+proc getTrackingState*(hmd: Hmd, absTime: cdouble): TrackingState
+  {.cdecl, importc: "ovrHmd_GetTrackingState", dynlib: libname.}
+
+proc getFovTextureSize*(hmd: Hmd, eye: EyeType, fov: FovPort, pixelsPerDisplayPixel: cfloat): Sizei
+  {.cdecl, importc: "ovrHmd_GetFovTextureSize", dynlib: libname.}
+
+when false:
+
   #-------------------------------------------------------------------------------------
   # *****  Rendering API Thread Safety
   #  All of rendering functions including the configure and frame functions
@@ -799,3 +757,17 @@ when false:
 
 
   
+#-------------------------------------------------------------------------------------
+# Manually added from OVR_CAPI_Util.h
+  
+type 
+  ProjectionModifier* {.size: sizeof(cint).} = enum
+    Projection_None = 0x00,
+    Projection_RightHanded = 0x01,
+    Projection_FarLessThanNear = 0x02,
+    Projection_FarClipAtInfinity = 0x04,
+    Projection_ClipRangeOpenGL = 0x08,
+  
+
+proc Matrix4f_Projection*(fov: FovPort, znear: cfloat, zfar: cfloat, projectionModFlags: ProjectionModifier): Matrix4f
+  {.cdecl, importc: "ovrMatrix4f_Projection", dynlib: libname.}

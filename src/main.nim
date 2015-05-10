@@ -25,11 +25,11 @@ var shader = DefaultLightingShader()
 #quit()
 
 let hmd = initHmdInstance()
-let ovrWrapper = initOvrWrapper(hmd)
-quit 0
 
 var win = createWindow(100, 100, 800, 600)
-sleep(1000)
+
+let ovrWrapper = initOvrWrapper(hmd)
+
 
 
 

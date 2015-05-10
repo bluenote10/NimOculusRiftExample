@@ -3,9 +3,9 @@ import opengl
 import wrapgl
 
 type
-  FramebufferTexture = object
-    w, h: int
-    id: GLuint
+  FramebufferTexture* = object
+    w*, h*: int
+    id*: GLuint
 
 proc initFramebufferTexture*(w: int, h: int): FramebufferTexture =
 
