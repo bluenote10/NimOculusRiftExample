@@ -30,12 +30,13 @@ var win = createWindow(100, 100, 800, 600)
 
 let ovrWrapper = initOvrWrapper(hmd)
 
+ovrWrapper.render(proc () = discard ())
 
+#os.sleep(1000)
 
 
 var shaderProg = shaderProgramCreate("shader/GaussianLighting.vs", "shader/GaussianLighting.fs")
 echo "returned from shaderProgramCreate"
-#os.sleep(1000)
 
 
 echo "done"

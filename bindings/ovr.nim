@@ -465,7 +465,7 @@ proc setEnabledCaps*(hmd: Hmd, hmdCaps: cuint)
   {.cdecl, importc: "ovrHmd_SetEnabledCaps", dynlib: libname.}
 
     
-proc configureTracking*(hmd: Hmd, supportedTrackingCaps: TrackingCaps, requiredTrackingCaps: TrackingCaps): ovrBool
+proc configureTracking*(hmd: Hmd, supportedTrackingCaps: cuint, requiredTrackingCaps: cuint): ovrBool
   {.cdecl, importc: "ovrHmd_ConfigureTracking", dynlib: libname.}
 
 proc recenterPose*(hmd: Hmd)
@@ -477,67 +477,34 @@ proc getTrackingState*(hmd: Hmd, absTime: cdouble): TrackingState
 proc getFovTextureSize*(hmd: Hmd, eye: EyeType, fov: FovPort, pixelsPerDisplayPixel: cfloat): Sizei
   {.cdecl, importc: "ovrHmd_GetFovTextureSize", dynlib: libname.}
 
-when false:
+proc configureRendering*(
+    hmd: Hmd,
+    apiConfig: ptr RenderAPIConfig,
+    distortionCaps: cuint,
+    #eyeFovIn: ptr FovPort,
+    #eyeRenderDescOut: ptr EyeRenderDesc
+    eyeFovIn: array[0..1, FovPort],
+    eyeRenderDescOut: var array[0..1, EyeRenderDesc]
+  ): ovrBool
+  {.cdecl, importc: "ovrHmd_ConfigureRendering", dynlib: libname.}
 
-  #-------------------------------------------------------------------------------------
-  # *****  Rendering API Thread Safety
-  #  All of rendering functions including the configure and frame functions
-  # are *NOT thread safe*. It is ok to use ConfigureRendering on one thread and handle
-  #  frames on another thread, but explicit synchronization must be done since
-  #  functions that depend on configured state are not reentrant.
-  #
-  #  As an extra requirement, any of the following calls must be done on
-  #  the render thread, which is the same thread that calls ovrHmd_BeginFrame
-  #  or ovrHmd_BeginFrameTiming.
-  #    - ovrHmd_EndFrame
-  #    - ovrHmd_GetEyeTimewarpMatrices
-  #-------------------------------------------------------------------------------------
-  # *****  SDK Distortion Rendering Functions
-  # These functions support rendering of distortion by the SDK through direct
-  # access to the underlying rendering API, such as D3D or GL.
-  # This is the recommended approach since it allows better support for future
-  # Oculus hardware, and enables a range of low-level optimizations.
-  #/ Configures rendering and fills in computed render parameters.
-  #/ This function can be called multiple times to change rendering settings.
-  #/ eyeRenderDescOut is a pointer to an array of two ovrEyeRenderDesc structs
-  #/ that are used to return complete rendering information for each eye.
-  #/  - apiConfig provides D3D/OpenGL specific parameters. Pass null
-  #/    to shutdown rendering and release all resources.
-  #/  - distortionCaps describe desired distortion settings.
-  Hmd_ConfigureRendering*(Hmd, hmd, `const`, 
-                            RenderAPIConfig * apiConfig, unsigned, int, 
-                            distortionCaps, `const`, FovPort, eyeFovIn[2], 
-                            EyeRenderDesc, eyeRenderDescOut[2])
-  #/ Begins a frame, returning timing information.
-  #/ This should be called at the beginning of the game rendering loop (on the render thread).
-  #/ Pass 0 for the frame index if not using ovrHmd_GetFrameTiming.
-  Hmd_BeginFrame*(Hmd, hmd, unsigned, int, frameIndex)
-  #/ Ends a frame, submitting the rendered textures to the frame buffer.
-  #/ - RenderViewport within each eyeTexture can change per frame if necessary.
-  #/ - 'renderPose' will typically be the value returned from ovrHmd_GetEyePoses
-  #/   but can be different if a different head pose was used for rendering.
-  #/ - This may perform distortion and scaling internally, assuming is it not
-  #/   delegated to another thread.
-  #/ - Must be called on the same thread as BeginFrame.
-  #/ - If ovrDistortionCap_DepthProjectedTimeWarp is enabled, then app must provide eyeDepthTexture
-  #/   and posTimewarpDesc. Otherwise both can be NULL.
-  #/ - *** This Function will call Present/SwapBuffers and potentially wait for GPU Sync ***.
-  Hmd_EndFrame*(Hmd, hmd, `const`, Posef, renderPose[2], `const`, 
-                  Texture, eyeTexture[2])
-  #/ Returns predicted head pose in outHmdTrackingState and offset eye poses in outEyePoses
-  #/ as an atomic operation. Caller need not worry about applying HmdToEyeViewOffset to the
-  #/ returned outEyePoses variables.
-  #/ - Thread-safe function where caller should increment frameIndex with every frame
-  #/   and pass the index where applicable to functions called on the  rendering thread.
-  #/ - hmdToEyeViewOffset[2] can be ovrEyeRenderDesc.HmdToEyeViewOffset returned from 
-  #/   ovrHmd_ConfigureRendering or ovrHmd_GetRenderDesc. For monoscopic rendering,
-  #/   use a vector that is the average of the two vectors for both eyes.
-  #/ - If frameIndex is not being utilized, pass in 0.
-  #/ - Assuming outEyePoses are used for rendering, it should be passed into ovrHmd_EndFrame.
-  #/ - If caller doesn't need outHmdTrackingState, it can be passed in as NULL
-  Hmd_GetEyePoses*(Hmd, hmd, unsigned, int, frameIndex, `const`, 
-                     Vector3f, hmdToEyeViewOffset[2], Posef, 
-                     outEyePoses[2], TrackingState * outHmdTrackingState)
+
+proc beginFrame*(hmd: Hmd, frameIndex: cuint): FrameTiming
+  {.cdecl, importc: "ovrHmd_BeginFrame", dynlib: libname.}
+
+proc endFrame*(hmd: Hmd, renderPose: array[0..1, Posef], eyeTexture: array[0..1, Texture])
+  {.cdecl, importc: "ovrHmd_EndFrame", dynlib: libname.}
+
+proc getEyePoses*(
+    hmd: Hmd,
+    frameIndex: cuint,
+    hmdToEyeViewOffset: array[0..1, Vector3f],
+    outEyePoses: var array[0..1, Posef],
+    outHmdTrackingState: ptr TrackingState
+  )
+  {.cdecl, importc: "ovrHmd_GetEyePoses", dynlib: libname.}
+
+when false:
   #/ Function was previously called ovrHmd_GetEyePose
   #/ Returns the predicted head pose to use when rendering the specified eye.
   #/ - Important: Caller must apply HmdToEyeViewOffset before using ovrPosef for rendering
