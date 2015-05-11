@@ -41,12 +41,12 @@ proc getPerspectiveProjection(hmd: Hmd, eye: int, znear = 0.001, zfar = 10000.0)
     for j in 0 .. 3:
       result[i,j] = ovrMat.M[j][i]
 
-proc `xor`(x: int, y: cuint): cuint = (x xor y.int).cuint
-proc `xor`(x: cuint, y: int): cuint = (x.int xor y).cuint
+proc `or`(x: int, y: cuint): cuint = (x or y.int).cuint
+proc `or`(x: cuint, y: int): cuint = (x.int or y).cuint
 
-proc `xor`[T: enum](x: T, y: T): cuint = (x.int xor y.int).cuint
-proc `xor`[T: enum](x: T, y: cuint): cuint = (x.int xor y).cuint
-proc `xor`[T: enum](x: cuint, y: T): cuint = (x xor y.int).cuint
+proc `or`[T: enum](x: T, y: T): cuint = (x.int or y.int).cuint
+proc `or`[T: enum](x: T, y: cuint): cuint = (x.int or y).cuint
+proc `or`[T: enum](x: cuint, y: T): cuint = (x or y.int).cuint
 
 
 
@@ -59,19 +59,27 @@ type
 
 
 type
+  EyeArray[T] = array[0..1, T]
+
   OvrWrapper = object
     hmd: Hmd
-    eyeTextures: array[0..1, Texture]
-    hmdToEyeViewOffsets: array[0..1, Vector3f]
+    projections: EyeArray[Mat4]
+    eyeTextures: EyeArray[Texture]
+    hmdToEyeViewOffsets: EyeArray[Vector3f]
+    framebuffers: EyeArray[FramebufferTexture]
 
+  MatrixSet* = object
+    projection*: Mat4
+    modelview*: Mat4
     
+
 proc initOvrWrapper*(hmdInst: HmdInstance, uncapped = false): OvrWrapper =
   let hmd = hmdInst.hmd
 
   # set hmd caps
-  let hmdCaps = HmdCap_LowPersistence xor
-                HmdCap_DynamicPrediction xor
-                #ovrHmdCap_ExtendDesktop xor
+  let hmdCaps = HmdCap_LowPersistence or
+                HmdCap_DynamicPrediction or
+                #ovrHmdCap_ExtendDesktop or
                 (if uncapped: HmdCap_NoVSync.int else: 0)
 
   hmd.setEnabledCaps(hmdCaps)
@@ -86,7 +94,7 @@ proc initOvrWrapper*(hmdInst: HmdInstance, uncapped = false): OvrWrapper =
   # initialize textures
   let oversampling = 1.0
   var eyeTexturesGL = [TextureGL(), TextureGL()]
-  var eyeFramebuffers: array[0..1, FramebufferTexture]
+  var eyeFramebuffers: EyeArray[FramebufferTexture]
   
   for eye in 0 .. 1:
     let recommendedSize = hmd.getFovTextureSize(eye.EyeType, fovPorts[eye], oversampling)
@@ -119,10 +127,10 @@ proc initOvrWrapper*(hmdInst: HmdInstance, uncapped = false): OvrWrapper =
   rc.Header.Multisample = 0 # does not seem to have any effect?
 
   let distortionCaps = 
-    DistortionCap_Vignette xor
-    #DistortionCap_NoRestore xor
-    DistortionCap_Overdrive xor
-    DistortionCap_ProfileNoSpinWaits xor
+    DistortionCap_Vignette or
+    #DistortionCap_NoRestore or
+    DistortionCap_Overdrive or
+    DistortionCap_ProfileNoSpinWaits or
     (if uncapped: 0 else: DistortionCap_TimeWarp.int)
     
   var eyeRenderDescs: array[0..1, EyeRenderDesc]
@@ -133,8 +141,8 @@ proc initOvrWrapper*(hmdInst: HmdInstance, uncapped = false): OvrWrapper =
 
   # start tracking
   let trackingCaps =
-    TrackingCap_Orientation xor
-    TrackingCap_Position xor
+    TrackingCap_Orientation or
+    TrackingCap_Position or
     TrackingCap_MagYawCorrection
   let trackingOk = hmd.configureTracking(trackingCaps, 0).toBool
   debug trackingOk
@@ -155,13 +163,15 @@ proc initOvrWrapper*(hmdInst: HmdInstance, uncapped = false): OvrWrapper =
   
   OvrWrapper(
     hmd: hmdInst.hmd,
+    projections: projections,
     eyeTextures: eyeTextures,
-    hmdToEyeViewOffsets: hmdToEyeViewOffsets
+    hmdToEyeViewOffsets: hmdToEyeViewOffsets,
+    framebuffers: eyeFramebuffers
   )
 
 
 
-proc render*(ovr: OvrWrapper, renderProc: proc ()) =
+proc render*(ovr: OvrWrapper, renderProc: proc (mset: MatrixSet)) =
   let hmd = ovr.hmd
   let numFrames = 0
   
@@ -173,5 +183,25 @@ proc render*(ovr: OvrWrapper, renderProc: proc ()) =
   debug repr(eyePoses)
   debug repr(trackingState)
 
+  for i in 0 .. 1:
+    let eye = hmd.EyeRenderOrder[i].int
+    
+    let P = ovr.projections[eye]
+
+    let pose = eyePoses[eye]
+
+    let PcurInv = Mat4.translate(-pose.Position.x, -pose.Position.y, -pose.Position.z)
+    let QcurInv = nQuaternion(-pose.Orientation.x, -pose.Orientation.y, -pose.Orientation.z, pose.Orientation.w).castToOrientationMatrix
+    # let Pref = ctrMatPos
+    # let Qref = ctrMatOri
+
+    let V = QcurInv * PcurInv # * Pref * Qref
+    
+    ovr.framebuffers[eye].activate()
+    glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+    renderProc(MatrixSet(projection: P, modelview: V))
+    ovr.framebuffers[eye].deactivate()
+
+    
   hmd.endFrame(eyePoses, ovr.eyeTextures)
   

@@ -3,6 +3,9 @@ import utils
 import math
 from strutils import `%`, join
 
+type
+  ftype* = float32
+
 include glm_vec3
 include glm_vec4
 

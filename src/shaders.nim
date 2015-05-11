@@ -198,6 +198,9 @@ proc setUniform(sp: ShaderProg, loc: int, m: var Mat3) =
   
 proc setUniform(sp: ShaderProg, loc: int, m: Mat4) =
   var data = m.getData
+  echo sp.repr
+  echo loc
+  echo m.repr
   glUniformMatrix4fv(loc.GLint, 1, false, cast[ptr GLfloat](data.addr))
 
 proc setUniform(sp: ShaderProg, loc: int, m: var Mat4) =
@@ -242,9 +245,9 @@ proc initDefaultLightingShader*(filenameBase: string): DefaultLightingShader =
 
 proc setVertexAttribArrayAndPointer*(s: DefaultLightingShader, vd: VertexData) =
   try:
-    let vaOffsetPos3D  = vd.vaOffsets[vaHasPos3D]
-    let vaOffsetNormal = vd.vaOffsets[vaHasNormal]
-    let vaOffsetColor  = vd.vaOffsets[vaHasColor]
+    let vaOffsetPos3D  = vd.vaOffsets[vkPos3D]
+    let vaOffsetNormal = vd.vaOffsets[vkNormal]
+    let vaOffsetColor  = vd.vaOffsets[vkColor]
     glEnableVertexAttribArray(s.attrLocPos3D.GLuint)
     glEnableVertexAttribArray(s.attrLocNormal.GLuint)
     glEnableVertexAttribArray(s.attrLocColor.GLuint)
@@ -256,6 +259,9 @@ proc setVertexAttribArrayAndPointer*(s: DefaultLightingShader, vd: VertexData) =
     quit "vertex data does not provide necessary vertex information: " & $vd.vaOffsets
 
 
+proc use*(s: DefaultLightingShader) =
+  s.prog.use
+    
 proc setProjection*(s: DefaultLightingShader, P: Mat4) =
   s.prog.use()
   s.prog.setUniform(s.unifLocCameraToClipMatrix, P)

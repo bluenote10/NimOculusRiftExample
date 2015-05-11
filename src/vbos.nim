@@ -38,15 +38,15 @@ proc initStaticVbo*[Shader](vd: VertexData, shader: Shader): StaticVbo[Shader] =
   StaticVbo[Shader](vd: vd, shader: shader, vaoId: vaoId, vbId: vbId)
 
 
-proc render*[Shader](vd: VertexData) =
+proc render*[Shader](vbo: StaticVbo[Shader]) =
   # bind
-  GlWrapper.VertexArrayObject.set(vd.vao)
+  GlWrapper.VertexArrayObject.set(vbo.vaoId)
 
   # activate shader
-  vd.shader.use()
+  vbo.shader.use()
 
   # draw
-  glDrawArrays(vd.primitiveType, 0, vertexData.numVertices)
+  glDrawArrays(GLenum(vbo.vd.primitiveType), 0, GLsizei(vbo.vd.numVertices))
 
 
 proc delete*[Shader](vd: VertexData) =

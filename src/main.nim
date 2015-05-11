@@ -18,11 +18,6 @@ import framebuffer
 import ovrwrapper as ovrwrappermodule
 
 echo "\n *** ----------------- running -----------------"
-var vd = vdGenEmpty()
-var shader = DefaultLightingShader()
-
-#let x = initStaticVbo(vd, shader)
-#quit()
 
 let hmd = initHmdInstance()
 
@@ -30,13 +25,31 @@ var win = createWindow(100, 100, 800, 600)
 
 let ovrWrapper = initOvrWrapper(hmd)
 
-ovrWrapper.render(proc () = discard ())
+
+let vd = VertexDataGen.cube(-0.1, 0.1, -0.1, 0.1, -0.1, 0.1, nColor(1,0,0))
+var shader = initDefaultLightingShader("shader/GaussianLighting")
+#var shader = DefaultLightingShader() # how can I avoid such a bug?
+
+let vbo = initStaticVbo(vd, shader)
+
+
+proc render(mset: MatrixSet) =
+  shader.use()
+  shader.setProjection(mset.projection)
+  shader.setModelview(mset.modelview)
+
+  vbo.render()  
+
+
+for i in 0 .. 100000:
+  ovrWrapper.render(render)
+  echo 0
 
 #os.sleep(1000)
 
 
-var shaderProg = shaderProgramCreate("shader/GaussianLighting.vs", "shader/GaussianLighting.fs")
-echo "returned from shaderProgramCreate"
+#var shaderProg = shaderProgramCreate("shader/GaussianLighting.vs", "shader/GaussianLighting.fs")
+#echo "returned from shaderProgramCreate"
 
 
 echo "done"
