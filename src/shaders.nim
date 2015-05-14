@@ -45,7 +45,7 @@ proc compileShader(source: string, typ: ShaderType): Option[ShaderId] =
 
     echo "Error compiling shader: ", retInfoLog
 
-    result = none[ShaderId]()
+    result = none(ShaderId)
   else:
     result = some(shaderId)
     
@@ -53,7 +53,7 @@ proc compileShader(source: string, typ: ShaderType): Option[ShaderId] =
 proc linkProgram(vsId, fsId: ShaderId): Option[ProgramId] =
 
   if not (vsId.isOkay and fsId.isOkay):
-    return none[ProgramId]()
+    return none(ProgramId)
 
   let progId = glCreateProgram()
   assert progId.isOkay
@@ -81,14 +81,14 @@ proc linkProgram(vsId, fsId: ShaderId): Option[ProgramId] =
   if getProgramStatus(GL_LINK_STATUS) == 0:
     let errorMsg = getProgramInfoLog()
     echo "Error linking program: ", errorMsg
-    return none[ProgramId]()
+    return none(ProgramId)
 
   # validate
   glValidateProgram(progId)
   if getProgramStatus(GL_VALIDATE_STATUS) == 0:
     let errorMsg = getProgramInfoLog()
     echo "Error validating program: ", errorMsg
-    return none[ProgramId]()
+    return none(ProgramId)
 
   return some(progId)
 
@@ -109,18 +109,27 @@ type
 
 proc shaderProgramCreate*(vsFile, fsFile: string): ShaderProg =
 
-  let contentVS = readFileOpt(vsFile)
-  let contentFS = readFileOpt(fsFile)
+  debug vsFile, fsFile
+  let contentVSOpt = readFileOpt(vsFile)
+  let contentFSOpt = readFileOpt(fsFile)
 
-  if (contentVS ?= contentVS) and (contentFS ?= contentFS):
+  #if contentVS ?= contentVSOpt and contentFS ?= contentFSOpt:
+  for contentVS in contentVSOpt:
+   for contentFS in contentFSOpt:
   
     let vsId = compileShader(contentVS, ShaderType.VertexShader)
     let fsId = compileShader(contentFS, ShaderType.FragmentShader)
-
-    if (vsId ?= vsId) and (fsId ?= fsId):
+    debug vsId
+    debug fsId
+    
+    #if (vsId ?= vsId) and (fsId ?= fsId):
+    for vsId in vsId:
+     for fsId in fsId:
       let pId = linkProgram(vsId, fsId)
+      debug pId
 
-      if pId ?= pId:
+      #if pId ?= pId:
+      for pId in pId:
 
         var numUnifsRaw: GLint
         glGetProgramiv(pId, GL_ACTIVE_UNIFORMS, numUnifsRaw.addr)
@@ -188,23 +197,23 @@ proc setUniform(sp: ShaderProg, loc: int, v: Vec3) =
 proc setUniform(sp: ShaderProg, loc: int, v: Vec4) =
   glUniform4f(loc.GLint, v.x, v.y, v.z, v.w)
 
-  
+
+const transpose = false
+
 proc setUniform(sp: ShaderProg, loc: int, m: Mat3) =
   var data = m.getData
-  glUniformMatrix3fv(loc.GLint, 1, false, cast[ptr GLfloat](data.addr))
+  glUniformMatrix3fv(loc.GLint, 1, transpose, cast[ptr GLfloat](data.addr))
 
 proc setUniform(sp: ShaderProg, loc: int, m: var Mat3) =
-  glUniformMatrix3fv(loc.GLint, 1, false, cast[ptr GLfloat](m.addr))
+  glUniformMatrix3fv(loc.GLint, 1, transpose, cast[ptr GLfloat](m.addr))
   
 proc setUniform(sp: ShaderProg, loc: int, m: Mat4) =
   var data = m.getData
-  echo sp.repr
-  echo loc
-  echo m.repr
-  glUniformMatrix4fv(loc.GLint, 1, false, cast[ptr GLfloat](data.addr))
+  debug sp, loc, m
+  glUniformMatrix4fv(loc.GLint, 1, transpose, cast[ptr GLfloat](data.addr))
 
 proc setUniform(sp: ShaderProg, loc: int, m: var Mat4) =
-  glUniformMatrix4fv(loc.GLint, 1, false, cast[ptr GLfloat](m.addr))
+  glUniformMatrix4fv(loc.GLint, 1, transpose, cast[ptr GLfloat](m.addr))
 
 
 
@@ -266,8 +275,8 @@ proc setProjection*(s: DefaultLightingShader, P: Mat4) =
   s.prog.use()
   s.prog.setUniform(s.unifLocCameraToClipMatrix, P)
 
-proc setModelview*(s: DefaultLightingShader, V: Mat4, Vinvopt: Option[Mat4] = none[Mat4]()) =
-  let Vinv = Vinvopt.getOrElse(V) # TODO: .inv.transpose
+proc setModelview*(s: DefaultLightingShader, V: Mat4, Vinvopt: Option[Mat4] = none(Mat4)) =
+  let Vinv: Mat3 = Vinvopt.getOrElse(V).toMat3 # TODO: should be V.inv.transpose
   s.prog.use()
   s.prog.setUniform(s.unifLocModelToCameraMatrix, V)
   s.prog.setUniform(s.unifLocNormalModelToCameraMatrix, Vinv)

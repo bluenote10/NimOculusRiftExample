@@ -5,6 +5,9 @@
 # the newer nim-glfw binding:
 import glfw/glfw
 import opengl
+import wrapgl
+
+export shouldClose
 
 # using liblwjgl3-deb from:
 # https://launchpad.net/~keithw/+archive/ubuntu/glfw3
@@ -27,6 +30,15 @@ proc createWindow*(posX, posY, w, h: int): Win =
 
   opengl.loadExtensions()
 
+  glEnable(GL_BLEND)
+  #  BlendFunc.setPremultipliedAlpha()
+
+  glEnable(GL_MULTISAMPLE_ARB)
+  #  glHint(GL_MULTISAMPLE_FILTER_HINT_NV, GL_NICEST)
+    
+  #glEnable(GL_CULL_FACE)
+  glDisable(GL_CULL_FACE)
+  GlWrapper.DepthTest.on()
 
 proc closeWindow(win: Win) =
 
@@ -34,4 +46,6 @@ proc closeWindow(win: Win) =
   glfw.terminate()
 
 
+proc handleInput*(win: Win) =
+  pollEvents()
 

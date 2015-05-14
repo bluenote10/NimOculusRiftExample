@@ -1,6 +1,7 @@
 
 from strutils import `%`, join
 import macros
+import times
 #import option
 
 
@@ -20,8 +21,19 @@ template runUnitTests*(code: stmt): stmt {.immediate.} =
     block:
       code
 
-    
-template newSeqFill(len: int, init: expr): expr =
+template runTimed*(into: expr, code: stmt): expr {.immediate.} =
+  let s = cpuTime()
+  let s2 = epochTime()
+  code
+  let e = cpuTime()
+  let e2 = epochTime()
+  echo "Epoch: ", e2-s2
+  echo "CPU: ", e-s
+  let into {.inject.} = e2-s2
+
+
+
+template newSeqFill*(len: int, init: expr): expr =
   var result = newSeq[type(init)](len)
   for i in 0 .. <len:
     result[i] = init
@@ -64,6 +76,8 @@ proc `/`*(x: int, y: float): float = x.toFloat / y
 
 template indices*(expr): expr = low(expr) .. high(expr)  
 
+
+
 # ------------------------------------------------
 # Slice improvements
 # ------------------------------------------------
@@ -90,7 +104,7 @@ template toArray[T](slice: Slice[T]): expr =
 # IO
 # ------------------------------------------------
 
-include option
+include options
 
 
 proc readFileOpt*(filename: string): Option[string] =
@@ -98,7 +112,7 @@ proc readFileOpt*(filename: string): Option[string] =
     let s = readFile(filename)
     some(s)
   except IOError:
-    none[string]()
+    none(string)
   
   
 

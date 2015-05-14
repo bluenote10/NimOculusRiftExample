@@ -1,6 +1,7 @@
 
 import ../bindings/ovr as ovr
 import opengl
+import wrapgl
 import framebuffer
 import glm
 import utils
@@ -10,13 +11,17 @@ type
     hmd: Hmd
 
 proc callback(level: cint; message: cstring) {.cdecl.} =
-  echo "Log: " & $level & $message
+  echo "OvrLog: " & $level & $message
   
+
 proc initHmdInstance*(): HmdInstance =
 
-  var initParams: ovr.InitParams
-  initParams.Flags = Init_Debug
-  initParams.LogCallback = callback
+  var initParams = InitParams(
+    Flags: 0, #Init_Debug.uint32_t
+    RequestedMinorVersion: 0,
+    LogCallback: callback,
+    ConnectionTimeoutMS: 0,
+  )
   echo repr(initParams)
 
   var success = ovr.initialize(initParams.addr).toBool
@@ -47,7 +52,6 @@ proc `or`(x: cuint, y: int): cuint = (x.int or y).cuint
 proc `or`[T: enum](x: T, y: T): cuint = (x.int or y.int).cuint
 proc `or`[T: enum](x: T, y: cuint): cuint = (x.int or y).cuint
 proc `or`[T: enum](x: cuint, y: T): cuint = (x or y.int).cuint
-
 
 
       
@@ -135,7 +139,9 @@ proc initOvrWrapper*(hmdInst: HmdInstance, uncapped = false): OvrWrapper =
     
   var eyeRenderDescs: array[0..1, EyeRenderDesc]
   #let success = hmd.configureRendering(rc.addr, distortionCaps, fovPorts[0].addr, eyeRenderDescs[0].addr).toBool
+  glCheckError()
   let renderingOk = hmd.configureRendering(rc.addr, distortionCaps, fovPorts, eyeRenderDescs).toBool
+  glCheckError()
   debug renderingOk
   debug repr(eyeRenderDescs)
 
@@ -174,14 +180,15 @@ proc initOvrWrapper*(hmdInst: HmdInstance, uncapped = false): OvrWrapper =
 proc render*(ovr: OvrWrapper, renderProc: proc (mset: MatrixSet)) =
   let hmd = ovr.hmd
   let numFrames = 0
-  
+
+  glCheckError()
   let frameTiming = hmd.beginFrame(0)
 
   var eyePoses: array[0..1, Posef]
   var trackingState: TrackingState
   hmd.getEyePoses(numFrames.cuint, ovr.hmdToEyeViewOffsets, eyePoses, trackingState.addr)
-  debug repr(eyePoses)
-  debug repr(trackingState)
+  #debug repr(eyePoses)
+  #debug repr(trackingState)
 
   for i in 0 .. 1:
     let eye = hmd.EyeRenderOrder[i].int
@@ -196,12 +203,17 @@ proc render*(ovr: OvrWrapper, renderProc: proc (mset: MatrixSet)) =
     # let Qref = ctrMatOri
 
     let V = QcurInv * PcurInv # * Pref * Qref
-    
-    ovr.framebuffers[eye].activate()
-    glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-    renderProc(MatrixSet(projection: P, modelview: V))
-    ovr.framebuffers[eye].deactivate()
 
-    
+    echo PcurInv
+
+    glCheckError()
+    ovr.framebuffers[eye].activate()
+    glCheckError()
+    renderProc(MatrixSet(projection: P, modelview: V))
+    glCheckError()
+    ovr.framebuffers[eye].deactivate()
+    glCheckError()
+
   hmd.endFrame(eyePoses, ovr.eyeTextures)
+  glCheckError()
   

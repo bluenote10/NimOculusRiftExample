@@ -33,10 +33,11 @@ proc `==`*[T](a: Option[T], b: Option[T]): bool =
     false
   
 
-proc none*[T](): Option[T] =
-  Option[T](kind: None)
+#proc none*[T](): Option[T] =
+#  Option[T](kind: None)
 
 #proc none*(T: typedesc): Option[T] = none[T]()
+proc none*(T: typedesc): Option[T] = Option[T](kind: None)
 
 proc some*[T](value: T): Option[T] =
   Option[T](kind: Some, value: value)
@@ -44,7 +45,7 @@ proc some*[T](value: T): Option[T] =
   
 proc map*[T,S](o: Option[T], f: proc (x: T): S {.closure.}): Option[S] =
   case o.kind:
-  of None: result = none[S]()
+  of None: result = none(S)
   of Some: result = some[S](f(o.value))
 
   
@@ -96,8 +97,8 @@ runUnitTests:
 
   block:
     var
-      x = none[int]()
-      y = some[int](1)
+      x = none(int)
+      y = some(1)
       z = some(1)
     echo x, " ", y, " ", z
     assert x.isEmpty
@@ -111,7 +112,7 @@ runUnitTests:
     let a = some(42)
     let a1 = a.map(proc (x: int): float = (2*x).float)
     let a2 = a.map do (x: int) -> float: (2*x).float
-    let b = none[int]()
+    let b = none(int)
     let b1 = b.map(proc (x: int): float = (2*x).float)
     let b2 = b.map do (x: int) -> float: (2*x).float 
     echo "Mapped: ", a1

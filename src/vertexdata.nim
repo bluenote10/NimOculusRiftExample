@@ -1,6 +1,7 @@
 
 import tables
 import opengl
+import wrapgl
 import hashes
 import glm
 import macros
@@ -11,15 +12,7 @@ proc hash*[T: Ordinal](x: T): THash {.inline.} =
 
 type
   f32 = float32
-  Color* = object
-    r, g, b, a: float32
   VertexDataGen* = object
-
-proc nColor*(r, g, b, a: float32): Color =
-  Color(r: r, g: g, b: b, a: a)
-
-proc nColor*(r, g, b: float32): Color =
-  Color(r: r, g: g, b: b, a: 1)
   
 
 type

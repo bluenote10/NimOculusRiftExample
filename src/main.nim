@@ -3,6 +3,18 @@
 {.hint[XDeclaredButNotUsed]: off.}
 #{.hint[Linking]: off.}
 
+
+type
+  Test = object
+
+proc chain(a, b: Test): Test = b
+
+let a = Test()
+let b = Test()
+let c = a.chain(b)
+
+
+
 import utils
 import glm
 from strutils import `%`, join
@@ -12,39 +24,55 @@ import window
 import shaders
 import vbos
 import vertexdata
-#import opengl
+import opengl
 import wrapgl
+import glfw/glfw
 import framebuffer
 import ovrwrapper as ovrwrappermodule
 
 echo "\n *** ----------------- running -----------------"
+quit 0
+
+var running = true
+
+proc keyHandler(win: Win, key: Key, scanCode: int, action: KeyAction, modKeys: ModifierKeySet) =
+  echo key
+  if key == keyEscape:
+    running = false
+
 
 let hmd = initHmdInstance()
 
-var win = createWindow(100, 100, 800, 600)
+var win = createWindow(20, 20, 1920, 1080)
 
 let ovrWrapper = initOvrWrapper(hmd)
 
-
-let vd = VertexDataGen.cube(-0.1, 0.1, -0.1, 0.1, -0.1, 0.1, nColor(1,0,0))
 var shader = initDefaultLightingShader("shader/GaussianLighting")
+#let vd = VertexDataGen.cube(-0.1, 0.1, -0.1, 0.1, -0.1, 0.1, nColor(1,0,0))
+let vd = VertexDataGen.cube(-10.1, 10.1, -10.1, 10.1, -10.1, 10.1, nColor(1,0,0,1))
 #var shader = DefaultLightingShader() # how can I avoid such a bug?
 
 let vbo = initStaticVbo(vd, shader)
 
 
 proc render(mset: MatrixSet) =
+  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+  GlWrapper.ClearColor.set(nColor(1, 1, 1))
   shader.use()
   shader.setProjection(mset.projection)
   shader.setModelview(mset.modelview)
 
   vbo.render()  
 
+let numFrames = 100
 
-for i in 0 .. 100000:
-  ovrWrapper.render(render)
-  echo 0
+runTimed(time):
+  while not win.shouldClose:
+    ovrWrapper.render(render)
+    win.handleInput()
 
+echo "Runtime: ", time
+echo "FPS: ", numFrames.float / time
 #os.sleep(1000)
 
 
