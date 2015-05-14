@@ -264,6 +264,11 @@ proc setVertexAttribArrayAndPointer*(s: DefaultLightingShader, vd: VertexData) =
     glVertexAttribPointer(s.attrLocPos3D,  3, cGL_FLOAT, false, vd.strideInBytes, vaOffsetPos3D)
     glVertexAttribPointer(s.attrLocNormal, 3, cGL_FLOAT, false, vd.strideInBytes, vaOffsetNormal)
     glVertexAttribPointer(s.attrLocColor,  4, cGL_FLOAT, false, vd.strideInBytes, vaOffsetColor)
+    glCheckError()
+    debug s.attrLocPos3D, vaOffsetPos3D
+    debug s.attrLocNormal, vaOffsetNormal
+    debug s.attrLocColor, vaOffsetColor
+    debug vd.strideInBytes
   except KeyError:
     quit "vertex data does not provide necessary vertex information: " & $vd.vaOffsets
 

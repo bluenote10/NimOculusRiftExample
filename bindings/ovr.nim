@@ -37,7 +37,7 @@ else:
 
 type 
   ovrBool* = cchar
-  uint32_t = uint32
+  uint32_t* = uint32
   uintptr_t* = ptr uint
 
 proc toBool*(ob: ovrBool): bool =
@@ -421,7 +421,7 @@ type
 # Parameters for the ovr_Initialize() call.
 type 
   InitParams* = object 
-    Flags* : InitFlags # uint32_t 
+    Flags* : uint32_t 
     RequestedMinorVersion* : uint32_t
     LogCallback* : LogCallback
     ConnectionTimeoutMS* : uint32_t

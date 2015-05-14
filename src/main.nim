@@ -30,8 +30,11 @@ import glfw/glfw
 import framebuffer
 import ovrwrapper as ovrwrappermodule
 
+when defined(testing):
+  quit 0
+
 echo "\n *** ----------------- running -----------------"
-quit 0
+
 
 var running = true
 
@@ -54,23 +57,29 @@ let vd = VertexDataGen.cube(-10.1, 10.1, -10.1, 10.1, -10.1, 10.1, nColor(1,0,0,
 
 let vbo = initStaticVbo(vd, shader)
 
+#quit 0
 
 proc render(mset: MatrixSet) =
-  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
   GlWrapper.ClearColor.set(nColor(1, 1, 1))
+  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+  #glClear(GL_DEPTH_BUFFER_BIT)
   shader.use()
   shader.setProjection(mset.projection)
   shader.setModelview(mset.modelview)
 
   vbo.render()  
 
-let numFrames = 100
+var numFrames = 0
 
 runTimed(time):
   while not win.shouldClose:
     ovrWrapper.render(render)
     win.handleInput()
+    numFrames += 1
 
+    #if numFrames == 10: break
+
+echo "Total number of frames: ", numFrames
 echo "Runtime: ", time
 echo "FPS: ", numFrames.float / time
 #os.sleep(1000)

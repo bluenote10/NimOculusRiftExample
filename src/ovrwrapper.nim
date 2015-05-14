@@ -116,11 +116,11 @@ proc initOvrWrapper*(hmdInst: HmdInstance, uncapped = false): OvrWrapper =
   eyeTextures[0] = cast[Texture](eyeTexturesGL[0])
   eyeTextures[1] = cast[Texture](eyeTexturesGL[1])
     
-  when false:
-    echo eyeTexturesGL[0].Header.API
-    echo eyeTexturesGL[0].TexId
-    echo eyeTexturesGL[1].Header.API
-    echo eyeTexturesGL[1].TexId
+  when true:
+    debug eyeTexturesGL[0].Header.API
+    debug eyeTexturesGL[0].TexId
+    debug eyeTexturesGL[1].Header.API
+    debug eyeTexturesGL[1].TexId
     debug repr(eyeTexturesGL)
     debug repr(eyeTextures)
 
