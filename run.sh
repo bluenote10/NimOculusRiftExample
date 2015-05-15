@@ -4,6 +4,7 @@ clear
 
 export LD_LIBRARY_PATH=/usr/local/lib
 
+#nim c --verbosity:0 --forceBuild -d:noAutoGLerrorCheck --clibdir:"/usr/local/lib" --parallelBuild:1 -o:../bin/main src/main.nim
 nim c --verbosity:0 --forceBuild --clibdir:"/usr/local/lib" --parallelBuild:1 -o:../bin/main src/main.nim
 
 compiler_exit=$?

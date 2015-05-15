@@ -2,6 +2,7 @@
 from strutils import `%`, join
 import macros
 import times
+import tables
 #import option
 
 
@@ -45,6 +46,7 @@ template newSeqTabulate*(len: int, typ, iter: expr): expr =
     let i {.inject.} = ii.int
     result[i] = iter
   result
+
   
 macro debug*(n: varargs[expr]): stmt =
   # `n` is a Nim AST that contains the whole macro invocation
@@ -107,6 +109,20 @@ template toArray[T](slice: Slice[T]): expr =
 include options
 
 
+proc get*[A,B](t: Table[A,B], key: A): Option[B] =
+  if t.hasKey(key):
+    some(t[key])
+  else:
+    none(B)
+
+proc getThrow*[A,B](t: Table[A,B], key: A): B =
+  let v = t.get(key)
+  matchesSome(v, x) do:
+    echo key, x
+    result = x
+  do:
+    raise newException(KeyError, "key not found: " & $key)
+    
 proc readFileOpt*(filename: string): Option[string] =
   try:
     let s = readFile(filename)

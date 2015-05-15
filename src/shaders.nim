@@ -22,7 +22,7 @@ proc compileShader(source: string, typ: ShaderType): Option[ShaderId] =
 
   let shaderId = glCreateShader(typ.Glenum)
   echo "Shader ID ", shaderId
-  #assert(shaderId.isOkay)
+  assert(shaderId.isOkay)
 
   # convert source string to arrays of strings + lengths
   var sourceArr = allocCStringArray([source])
@@ -160,6 +160,10 @@ proc shaderProgramCreate*(vsFile, fsFile: string): ShaderProg =
 
         let unifsMap = newSeqTabulate(numUnifs, (string,int), extractUnif(i)).toTable
         let attrsMap = newSeqTabulate(numAttrs, (string,int), extractAttr(i)).toTable
+        debug unifsMap
+        debug attrsMap
+        assert unifsMap.len == numUnifs
+        assert attrsMap.len == numAttrs
       
         return ShaderProg(
           id: pId,
@@ -179,8 +183,8 @@ proc shaderProgramCreate*(filenameBase: string): ShaderProg =
 proc use(sp: ShaderProg) =
   GlWrapper.Program.set(sp.id)
 
-proc getUniformLocation  (sp: ShaderProg, name: string): int = sp.unifsMap[name]
-proc getAttributeLocation(sp: ShaderProg, name: string): int = sp.attrsMap[name]
+proc getUniformLocation  (sp: ShaderProg, name: string): int = sp.unifsMap.getThrow(name)
+proc getAttributeLocation(sp: ShaderProg, name: string): int = sp.attrsMap.getThrow(name)
 
 proc setUniform(sp: ShaderProg, loc: int, x: float) =
   glUniform1f(loc.GLint, x)
@@ -202,7 +206,8 @@ const transpose = false
 
 proc setUniform(sp: ShaderProg, loc: int, m: Mat3) =
   var data = m.getData
-  glUniformMatrix3fv(loc.GLint, 1, transpose, cast[ptr GLfloat](data.addr))
+  #glUniformMatrix3fv(loc.GLint, 1, transpose, cast[ptr GLfloat](data[0].addr))
+  glUniformMatrix3fv(loc.GLint, 1, transpose, data[0].addr)
 
 proc setUniform(sp: ShaderProg, loc: int, m: var Mat3) =
   glUniformMatrix3fv(loc.GLint, 1, transpose, cast[ptr GLfloat](m.addr))
@@ -210,7 +215,8 @@ proc setUniform(sp: ShaderProg, loc: int, m: var Mat3) =
 proc setUniform(sp: ShaderProg, loc: int, m: Mat4) =
   var data = m.getData
   debug sp, loc, m
-  glUniformMatrix4fv(loc.GLint, 1, transpose, cast[ptr GLfloat](data.addr))
+  #glUniformMatrix4fv(loc.GLint, 1, transpose, cast[ptr GLfloat](data[0].addr))
+  glUniformMatrix4fv(loc.GLint, 1, transpose, data[0].addr)
 
 proc setUniform(sp: ShaderProg, loc: int, m: var Mat4) =
   glUniformMatrix4fv(loc.GLint, 1, transpose, cast[ptr GLfloat](m.addr))

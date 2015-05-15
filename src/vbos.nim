@@ -32,23 +32,26 @@ proc initStaticVbo*[Shader](vd: VertexData, shader: Shader): StaticVbo[Shader] =
   #var buffer: seq[float32]
   #shallowCopy buffer, vd.data
   var buffer = vd.data
-  glBufferData(GL_ARRAY_BUFFER, GLsizeiptr(vd.sizeInBytes), buffer.addr, GL_STATIC_DRAW) # TODO: GLsizeiptr?
+  glBufferData(GL_ARRAY_BUFFER, GLsizeiptr(vd.sizeInBytes), buffer[0].addr, GL_STATIC_DRAW) # TODO: GLsizeiptr?
   #glBufferData(GL_ARRAY_BUFFER, (vd.sizeInBytes).GLsizeiptr, buffer.addr, GL_STATIC_DRAW) # TODO: GLsizeiptr?
   glCheckError()
-  debug buffer
+  debug buffer, vd.sizeInBytes
 
   # unbind everything
-  glBindBuffer(GL_ARRAY_BUFFER, 0)
-  GlWrapper.VertexArrayObject.set(0)
+  #GlWrapper.VertexArrayObject.set(0)
+  #glBindBuffer(GL_ARRAY_BUFFER, 0)
   glCheckError()
   
   StaticVbo[Shader](vd: vd, shader: shader, vaoId: vaoId, vbId: vbId)
 
 
 proc render*[Shader](vbo: StaticVbo[Shader]) =
+  echo "\n *** VBO"
+  debug vbo.repr
   # bind
   GlWrapper.VertexArrayObject.set(vbo.vaoId)
-
+  glBindBuffer(GL_ARRAY_BUFFER, vbo.vbId)
+  
   # activate shader
   vbo.shader.use()
 

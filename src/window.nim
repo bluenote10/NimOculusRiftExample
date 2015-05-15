@@ -21,7 +21,8 @@ proc createWindow*(posX, posY, w, h: int): Win =
     dim = (w, h),
     decorated = false,
     version = glv33,
-    forwardCompat = true,
+    forwardCompat = false, # not recommended for OpenGL 3.2+ https://www.opengl.org/wiki/Core_And_Compatibility_in_Contexts
+    profile = glpCompat, # eventually, switch to glpCore
     )
   win.pos = (posX, posY)
   result = win
@@ -30,16 +31,19 @@ proc createWindow*(posX, posY, w, h: int): Win =
 
   opengl.loadExtensions()
 
-  glEnable(GL_BLEND)
-  #  BlendFunc.setPremultipliedAlpha()
+  #glEnable(GL_BLEND)
+  #glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
+  # BlendFunc.setPremultipliedAlpha()
 
-  glEnable(GL_MULTISAMPLE_ARB)
-  #  glHint(GL_MULTISAMPLE_FILTER_HINT_NV, GL_NICEST)
+  # glEnable(GL_MULTISAMPLE_ARB)
+  # glHint(GL_MULTISAMPLE_FILTER_HINT_NV, GL_NICEST)
 
-  glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
+  #glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
   #glEnable(GL_CULL_FACE)
   glDisable(GL_CULL_FACE)
-  GlWrapper.DepthTest.on()
+  #GlWrapper.DepthTest.on()
+  GlWrapper.DepthTest.off()
+  
 
 proc closeWindow(win: Win) =
 

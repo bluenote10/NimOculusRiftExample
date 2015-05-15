@@ -137,7 +137,12 @@ proc `$`*[T](o: Option[T]): string =
   else:
     "none(" & T.name & ")"
 
-
+template matchesSome*[T](o: Option[T], into: expr, code1: stmt, code2: stmt): stmt {.immediate.} =
+  if o.isSome:
+    let into {.inject.} = o.get
+    code1
+  else:
+    code2
 
 when isMainModule:
   template expect(E: expr, body: stmt) =

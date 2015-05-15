@@ -2,9 +2,11 @@
 import ../bindings/ovr as ovr
 import opengl
 import wrapgl
+import unsigned
 import framebuffer
 import glm
 import utils
+
 
 type
   HmdInstance = object
@@ -44,14 +46,19 @@ proc getPerspectiveProjection(hmd: Hmd, eye: int, znear = 0.001, zfar = 10000.0)
   let ovrMat = Matrix4f_Projection(fovPort, znear, zfar, Projection_RightHanded)
   for i in 0 .. 3:
     for j in 0 .. 3:
-      result[i,j] = ovrMat.M[j][i]
+      #result[i,j] = ovrMat.M[j][i]
+      result[i,j] = ovrMat.M[i][j]
 
-proc `or`(x: int, y: cuint): cuint = (x or y.int).cuint
-proc `or`(x: cuint, y: int): cuint = (x.int or y).cuint
+# allow to mix cuint with int
+proc `or`(x: int, y: cuint): cuint = x.cuint or y
+proc `or`(x: cuint, y: int): cuint = x or y.cuint
 
-proc `or`[T: enum](x: T, y: T): cuint = (x.int or y.int).cuint
-proc `or`[T: enum](x: T, y: cuint): cuint = (x.int or y).cuint
-proc `or`[T: enum](x: cuint, y: T): cuint = (x or y.int).cuint
+# convert enum or enum to cuint
+proc `or`[T: enum](x: T, y: T): cuint = x.cuint or y.cuint
+
+# allow to mix cuint with enum
+proc `or`[T: enum](x: T, y: cuint): cuint = x.cuint or y
+proc `or`[T: enum](x: cuint, y: T): cuint = x or y.cuint
 
 
       
@@ -63,7 +70,7 @@ type
 
 
 type
-  EyeArray[T] = array[0..1, T]
+  EyeArray[T] = array[2, T]
 
   OvrWrapper = object
     hmd: Hmd
@@ -137,7 +144,7 @@ proc initOvrWrapper*(hmdInst: HmdInstance, uncapped = false): OvrWrapper =
     DistortionCap_ProfileNoSpinWaits or
     (if uncapped: 0 else: DistortionCap_TimeWarp.int)
     
-  var eyeRenderDescs: array[0..1, EyeRenderDesc]
+  var eyeRenderDescs: array[2, EyeRenderDesc]
   #let success = hmd.configureRendering(rc.addr, distortionCaps, fovPorts[0].addr, eyeRenderDescs[0].addr).toBool
   glCheckError()
   let renderingOk = hmd.configureRendering(rc.addr, distortionCaps, fovPorts, eyeRenderDescs).toBool
@@ -184,7 +191,7 @@ proc render*(ovr: OvrWrapper, renderProc: proc (mset: MatrixSet)) =
   glCheckError()
   let frameTiming = hmd.beginFrame(0)
 
-  var eyePoses: array[0..1, Posef]
+  var eyePoses: array[2, Posef]
   var trackingState: TrackingState
   hmd.getEyePoses(numFrames.cuint, ovr.hmdToEyeViewOffsets, eyePoses, trackingState.addr)
   #debug repr(eyePoses)
@@ -204,12 +211,19 @@ proc render*(ovr: OvrWrapper, renderProc: proc (mset: MatrixSet)) =
 
     let V = QcurInv * PcurInv # * Pref * Qref
 
-    echo PcurInv
+    #echo PcurInv
+    echo QcurInv
 
     glCheckError()
     ovr.framebuffers[eye].activate()
+
+    if i == 1: GlWrapper.ClearColor.set(nColor(0, 1, 0))
+    else:      GlWrapper.ClearColor.set(nColor(0, 0, 1))
+    glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+
     glCheckError()
     renderProc(MatrixSet(projection: P, modelview: V))
+
     glCheckError()
     ovr.framebuffers[eye].deactivate()
     glCheckError()

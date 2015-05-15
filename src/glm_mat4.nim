@@ -74,9 +74,36 @@ proc scale*(T: typedesc[Mat4], x: ftype, y: ftype, z: ftype): Mat4 =
 
 
 runUnitTests:
-  var
-    m = Mat4.identity()
-    o = Mat4.identity()
+  let mustBe: array[0..15, ftype] = [1.0.ftype,5.0,9.0,13.0, 2.0,6.0,10.0,14.0, 3.0,7.0,11.0,15.0, 4.0,8.0,12.0,16.0]
 
-  echo m, m[0,0], m*o
+  block:
+    var m = Mat4.identity()
 
+    m[0,0] = 1
+    m[0,1] = 2
+    m[0,2] = 3
+    m[0,3] = 4
+    m[1,0] = 5
+    m[1,1] = 6
+    m[1,2] = 7
+    m[1,3] = 8
+    m[2,0] = 9
+    m[2,1] = 10
+    m[2,2] = 11
+    m[2,3] = 12
+    m[3,0] = 13
+    m[3,1] = 14
+    m[3,2] = 15
+    m[3,3] = 16
+    assert (m.getData == mustBe)
+
+  block:
+    let m = nMat4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)
+    assert (m.getData == mustBe)
+
+  block:
+    let m = nMat4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)
+    let prod = m * m
+    assert prod[0,0] == 90
+    assert prod[1,3] == 280
+    
