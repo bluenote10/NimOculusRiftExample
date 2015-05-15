@@ -38,6 +38,8 @@ proc createWindow*(posX, posY, w, h: int): Win =
   # glEnable(GL_MULTISAMPLE_ARB)
   # glHint(GL_MULTISAMPLE_FILTER_HINT_NV, GL_NICEST)
 
+  #glFrontFace(GL_CCW)
+
   #glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
   #glEnable(GL_CULL_FACE)
   glDisable(GL_CULL_FACE)

@@ -5,6 +5,7 @@ import wrapgl
 import hashes
 import glm
 import macros
+import math
 
 proc hash*[T: Ordinal](x: T): THash {.inline.} = 
   ## efficient hashing of any ordinal type (e.g. enums)
@@ -111,6 +112,24 @@ proc cube*(T: typedesc[VertexDataGen],
     # bottom face
     vd.addAll(p1, nVec3(0,-1,0), color,    p5, nVec3(0,-1,0), color,    p6, nVec3(0,-1,0), color)
     vd.addAll(p6, nVec3(0,-1,0), color,    p2, nVec3(0,-1,0), color,    p1, nVec3(0,-1,0), color)
+    
+    result = vd
+    
+proc randomMess*(T: typedesc[VertexDataGen]): VertexData =
+
+    var vd = initVertexData(10, {vkPos3D: 0, vkNormal: 12, vkColor: 24}.toTable)
+
+    let color = nColor(1,0,0)
+    proc r(): float32 = random(100.0) - 50
+    
+    for i in 1..1000:
+      let p1 = nVec3(r(), r(), r())
+      let p2 = nVec3(r(), r(), r())
+      let p3 = nVec3(r(), r(), r())
+      let p4 = nVec3(r(), r(), r())
+
+      vd.addAll(p1, nVec3(r(),r(),r()), color,    p2, nVec3(r(),r(),r()), color,    p4, nVec3(r(),r(),r()), color)
+      vd.addAll(p4, nVec3(r(),r(),r()), color,    p3, nVec3(r(),r(),r()), color,    p1, nVec3(r(),r(),r()), color)
     
     result = vd
     

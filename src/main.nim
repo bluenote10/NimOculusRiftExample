@@ -21,6 +21,23 @@ import glfw/wrapper
 import framebuffer
 import ovrwrapper as ovrwrappermodule
 
+
+
+#{.emit: """ printf("Size of: %d", sizeof(int)); """}
+
+{.emit: """
+#include <stdio.h>
+#include <stdlib.h>
+
+void c_call()
+{
+  printf("Size of ptrdiff_t: %d\n", sizeof(ptrdiff_t));
+}
+"""}
+
+proc c_call() {.importc, nodecl.}
+c_call()
+
 when defined(testing):
   quit 0
 
@@ -45,7 +62,8 @@ var win = createWindow(20, 20, 1920, 1080)
 let ovrWrapper = initOvrWrapper(hmd)
 
 var shader = initDefaultLightingShader("shader/GaussianLighting")
-let vd = VertexDataGen.cube(-0.1, 0.1, -0.1, 0.1, -1.1, -0.9, nColor(1,0,0))
+let vd = VertexDataGen.randomMess
+#let vd = VertexDataGen.cube(-0.1, 0.1, -0.1, 0.1, -1.1, -0.9, nColor(1,0,0))
 #let vd = VertexDataGen.cube(-0.1, 0.1, -0.1, 0.1, -0.1, 0.1, nColor(1,0,0))
 #let vd = VertexDataGen.cube(-100.1, 100.1, -100.1, 100.1, -100.1, 100.1, nColor(1,0,0,1))
 #var shader = DefaultLightingShader() # how can I avoid such a bug?

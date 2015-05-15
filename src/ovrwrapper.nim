@@ -212,7 +212,7 @@ proc render*(ovr: OvrWrapper, renderProc: proc (mset: MatrixSet)) =
     let V = QcurInv * PcurInv # * Pref * Qref
 
     #echo PcurInv
-    echo QcurInv
+    #echo QcurInv
 
     glCheckError()
     ovr.framebuffers[eye].activate()

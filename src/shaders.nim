@@ -214,9 +214,10 @@ proc setUniform(sp: ShaderProg, loc: int, m: var Mat3) =
   
 proc setUniform(sp: ShaderProg, loc: int, m: Mat4) =
   var data = m.getData
-  debug sp, loc, m
+  #debug sp, loc, m
   #glUniformMatrix4fv(loc.GLint, 1, transpose, cast[ptr GLfloat](data[0].addr))
-  glUniformMatrix4fv(loc.GLint, 1, transpose, data[0].addr)
+  #glUniformMatrix4fv(loc.GLint, 1, transpose, data[0].addr)
+  glUniformMatrix4fv(loc.GLint, 1, transpose, cast[ptr GLfloat](data.addr))
 
 proc setUniform(sp: ShaderProg, loc: int, m: var Mat4) =
   glUniformMatrix4fv(loc.GLint, 1, transpose, cast[ptr GLfloat](m.addr))
