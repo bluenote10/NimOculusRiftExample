@@ -2,7 +2,7 @@
 
 type
   Mat4Index = range[0..3]
-  Mat4* {.bycopy.} = object
+  Mat4* = object
     data*: array[16, ftype]
 
 proc `[]`*(m: Mat4, i, j: Mat4Index): ftype =
@@ -12,19 +12,22 @@ proc `[]=`*(m: var Mat4, i, j: Mat4Index, x: ftype) =
   m.data[j*4 + i] = x
   
 proc `*`*(this: Mat4, that: Mat4): Mat4 =
-  #var data = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
-  #result = Mat4(data: data)
   for i in 0 .. <4:
     for j in 0 .. <4:
       for k in 0 .. <4:
         result[i,j] = result[i,j] + this[i,k] * that[k,j]
         #result[i,j] += this[i,k] * that[k,j]
   
-
 proc `$`*(m: Mat4): string =
   "Mat4($#)" % m.data.map(proc (x: ftype): string = $x).join(", ")
 
 proc getData*(m: Mat4): array[16, ftype] = m.data
+
+proc transpose*(m: Mat4): Mat4 =
+  for i in 0 .. <4:
+    for j in 0 .. <4:
+      result[i,j] = m[j,i]
+
 
 # Constructors
 proc nMat4(m00, m01, m02, m03,

@@ -3,6 +3,9 @@ from strutils import `%`, join
 import macros
 import times
 import tables
+import future
+
+export `=>`
 #import option
 
 

@@ -288,7 +288,8 @@ proc setProjection*(s: DefaultLightingShader, P: Mat4) =
   s.prog.setUniform(s.unifLocCameraToClipMatrix, P)
 
 proc setModelview*(s: DefaultLightingShader, V: Mat4, Vinvopt: Option[Mat4] = none(Mat4)) =
-  let Vinv: Mat3 = Vinvopt.getOrElse(V).toMat3 # TODO: should be V.inv.transpose
+  let Vinv: Mat3 = Vinvopt.map((m: Mat4) => m.toMat3)
+                          .getOrElse(V.toMat3.inverse.transpose)
   s.prog.use()
   s.prog.setUniform(s.unifLocModelToCameraMatrix, V)
   s.prog.setUniform(s.unifLocNormalModelToCameraMatrix, Vinv)

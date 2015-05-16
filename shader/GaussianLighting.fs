@@ -71,9 +71,12 @@ void main() {
   // added noise
   outputColor = vec4(noisy(outputColorWithoutAlpha.rgb), diffuseColor.a);
 
+  // for debugging (best to condition on outputColor to avoid attribute/uniform removal)
+  /*
   if (outputColor.x != 100) {
     outputColor = vec4(1, 0, 0, 1);
   }
+  */
 }
 
 

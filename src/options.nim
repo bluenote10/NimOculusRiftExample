@@ -77,6 +77,12 @@ template `??=`*(into: expr, o: Option): bool {.immediate.} =
     into = o.get
   o.isSome
 
+template matchesSome*[T](o: Option[T], into: expr, code1: stmt, code2: stmt): stmt {.immediate.} =
+  if o.isSome:
+    let into {.inject.} = o.get
+    code1
+  else:
+    code2
 
 proc get*[T](o: Option[T]): T =
   ## Returns the value of `o`. Raises ``FieldError`` if it is `none`.
@@ -102,18 +108,18 @@ template getOr*[T](a, b: Option[T]): Option[T] =
   else: b
 
 proc map*[A,B](o: Option[A], f: proc (x: A): B): Option[B] =
-  ## Takes an modification proc f, and applies it to the optional value, i.e.,
-  ## returns `some(f(o.val))` if `o` is has a value otherwise `none`
-  if x ??= o:
-    some(f(x))
+  ## Takes a modification proc ``f``, and applies it to the optional value, i.e.,
+  ## returns ``some(f(o.val))`` if ``o`` is has a value otherwise `none`
+  if o.isSome:
+    some(f(o.get))
   else:
     none(B)
 
 proc flatMap*[A,B](o: Option[A], f: proc (x: A): Option[B]): Option[B] =
   ## Takes an modification proc f with an optional result, and applies it to
-  ## the optional value. This means if `o` has a value, the result becomes
-  ## the optional result of the computation `f(o.val)`. If `o` is `none`,
-  ## the result is `none(B)`.
+  ## the optional value. This means if ``o`` has a value, the result becomes
+  ## the optional result of the computation ``f(o.val)``. If ``o`` is `none`,
+  ## the result is ``none(B)``.
   if x ??= o:
     f(x)
   else:
@@ -137,12 +143,6 @@ proc `$`*[T](o: Option[T]): string =
   else:
     "none(" & T.name & ")"
 
-template matchesSome*[T](o: Option[T], into: expr, code1: stmt, code2: stmt): stmt {.immediate.} =
-  if o.isSome:
-    let into {.inject.} = o.get
-    code1
-  else:
-    code2
 
 when isMainModule:
   template expect(E: expr, body: stmt) =

@@ -59,8 +59,9 @@ proc glDrawBuffers*(buf: GLenum) {.inline.} =
   glDrawBuffers(1.GLsizei, tmp.addr)
   
 proc glVertexAttribPointer*(index: int, size: int, `type`: int, normalized: bool, stride: int, offset: int) {.inline.} =
-  var tmpOffset = offset
-  glVertexAttribPointer(index.GLuint, size.GLint, `type`.GLenum, normalized.GLboolean, stride.GLsizei, tmpOffset.addr)
+  #var tmpOffset = offset
+  #glVertexAttribPointer(index.GLuint, size.GLint, `type`.GLenum, normalized.GLboolean, stride.GLsizei, tmpOffset.addr)
+  glVertexAttribPointer(index.GLuint, size.GLint, `type`.GLenum, normalized.GLboolean, stride.GLsizei, cast[ptr GLvoid](offset))
 
 proc glTexImage2D*(target: int, level: int, internalformat: int, width: int, height: int, border: int, format: int, `type`: int, pixels: pointer) =
   glTexImage2D(target.GLenum, level.GLint, internalformat.GLint, width.GLsizei, height.GLsizei, border.GLint, format.GLenum, `type`.GLenum, pixels)  
@@ -87,17 +88,7 @@ proc get*[T,X](sw: StateWrapper[T,X]): Option[T] =
   sw.lastState
 
 proc set*[T,X](sw: var StateWrapper[T,X], x: T) =
-  discard """
-  if state ?= (sw.lastState):
-    echo state
-    #if state != x:
-    #  sw.applyStateChange(x)
-    #  sw.lastState = some(x)
-  else:
-    sw.lastState = some(x)
-  """
   for state in sw.lastState:
-    echo "Current state ", state
     if state != x:
       sw.applyStateChange(x)
       sw.lastState = some(x)
@@ -106,8 +97,7 @@ proc set*[T,X](sw: var StateWrapper[T,X], x: T) =
     sw.applyStateChange(x)
     sw.lastState = some(x)
 
-  echo "State is ", sw.lastState.get.repr
- 
+
 proc defineStateWrapper[T,X](f: proc (x: T)): StateWrapper[T,X] =
   StateWrapper[T,X](lastState: none(T), applyStateChange: f)
 
@@ -124,7 +114,7 @@ proc off*(sw: var StateWrapper[bool,Switchable]) =
 
 # depth test
 proc depthTestChanger(x: bool) =
-  echo("Setting depth test to ", x)
+  #echo("Setting depth test to ", x)
   if x: glEnable(GL_DEPTH_TEST)
   else: glDisable(GL_DEPTH_TEST)
 
@@ -135,7 +125,7 @@ proc DepthTest*(T: typedesc[GlWrapper]): var StateWrapper[bool,Switchable] = dep
 
 # shader program
 proc shaderChanger(id: GLuint) =
-  echo "Using program: ", id
+  #echo "Using program: ", id
   glUseProgram(id)
 
 var vertexShaderProgVar = defineStateWrapper[GLuint,Default](shaderChanger)
@@ -145,7 +135,7 @@ proc Program*(T: typedesc[GlWrapper]): var StateWrapper[GLuint,Default] = vertex
 
 # vertex array object
 proc vaoChanger(vao: GLuint) =
-  echo "Using Vertex Array Object: ", vao
+  #echo "Using Vertex Array Object: ", vao
   glBindVertexArray(vao)
 
 var vertexArrayObjectVar = defineStateWrapper[GLuint,Default](vaoChanger)

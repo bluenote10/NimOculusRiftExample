@@ -11,6 +11,8 @@ import utils
 type
   HmdInstance = object
     hmd: Hmd
+    winRes*: tuple[w, h: int]
+    winPos*: tuple[x, y: int]
 
 proc callback(level: cint; message: cstring) {.cdecl.} =
   echo "OvrLog: " & $level & $message
@@ -38,7 +40,13 @@ proc initHmdInstance*(): HmdInstance =
   var hmd = ovr.hmdCreate(0)
   echo "HMD detected: ", hmd.repr
 
-  HmdInstance(hmd: hmd)
+  # the most important thing to expose at this time
+  # is the recommended window resolution and position,
+  # which is needed for window creation
+  let res = (w: hmd.Resolution.w.int, h: hmd.Resolution.h.int)
+  let pos = (x: hmd.WindowsPos.x.int, y: hmd.WindowsPos.y.int)
+  
+  HmdInstance(hmd: hmd, winRes: res, winPos: pos)
   
 
 proc getPerspectiveProjection(hmd: Hmd, eye: int, znear = 0.001, zfar = 10000.0): Mat4 =
@@ -141,7 +149,7 @@ proc initOvrWrapper*(hmdInst: HmdInstance, uncapped = false): OvrWrapper =
     DistortionCap_Vignette or
     #DistortionCap_NoRestore or
     DistortionCap_Overdrive or
-    DistortionCap_ProfileNoSpinWaits or
+    #DistortionCap_ProfileNoSpinWaits or
     (if uncapped: 0 else: DistortionCap_TimeWarp.int)
     
   var eyeRenderDescs: array[2, EyeRenderDesc]
@@ -217,8 +225,8 @@ proc render*(ovr: OvrWrapper, renderProc: proc (mset: MatrixSet)) =
     glCheckError()
     ovr.framebuffers[eye].activate()
 
-    if i == 1: GlWrapper.ClearColor.set(nColor(0, 1, 0))
-    else:      GlWrapper.ClearColor.set(nColor(0, 0, 1))
+    if i == 1: GlWrapper.ClearColor.set(nColor(1, 1, 1))
+    else:      GlWrapper.ClearColor.set(nColor(1, 1, 1))
     glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
 
     glCheckError()
