@@ -239,3 +239,6 @@ proc render*(ovr: OvrWrapper, renderProc: proc (mset: MatrixSet)) =
   hmd.endFrame(eyePoses, ovr.eyeTextures)
   glCheckError()
   
+
+proc recenterPose*(ovr: OvrWrapper) =
+  ovr.hmd.recenterPose

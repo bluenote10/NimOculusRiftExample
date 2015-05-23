@@ -19,7 +19,6 @@ import ovrwrapper as ovrwrappermodule
 import world
 
 
-let vd = generateWorld()
 when defined(testing):
   quit 0
 
@@ -36,13 +35,15 @@ var win = createWindow(
   hmd.winRes.h)
 
 
-let ovrWrapper = initOvrWrapper(hmd, uncapped = false)
+let ovrWrapper = initOvrWrapper(hmd, uncapped = true)
 
 var shader = initDefaultLightingShader("shader/GaussianLighting")
+let vd = generateWorld()
 #let vd = VertexDataGen.cube(-0.1, 0.1, -0.1, 0.1, -1.1, -0.9, nColor(1,0,0))
 
 let vbo = initStaticVbo(vd, shader)
 
+ovrWrapper.recenterPose
 
 proc render(mset: MatrixSet) =
   ## Rendering callback function
