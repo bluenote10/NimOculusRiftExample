@@ -16,8 +16,10 @@ import vertexdata
 import vbos
 import glm
 import ovrwrapper as ovrwrappermodule
+import world
 
 
+let vd = generateWorld()
 when defined(testing):
   quit 0
 
@@ -37,7 +39,7 @@ var win = createWindow(
 let ovrWrapper = initOvrWrapper(hmd, uncapped = false)
 
 var shader = initDefaultLightingShader("shader/GaussianLighting")
-let vd = VertexDataGen.cube(-0.1, 0.1, -0.1, 0.1, -1.1, -0.9, nColor(1,0,0))
+#let vd = VertexDataGen.cube(-0.1, 0.1, -0.1, 0.1, -1.1, -0.9, nColor(1,0,0))
 
 let vbo = initStaticVbo(vd, shader)
 
