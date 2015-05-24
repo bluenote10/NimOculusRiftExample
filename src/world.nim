@@ -25,6 +25,19 @@ const possibleBricks = [
   #nBrick(8,2),
 ]
 
+const possibleColors = [
+  nColorInt(242, 243, 242),
+  nColorInt(161, 165, 162),
+  nColorInt(196, 40, 27),
+  nColorInt(13, 105, 171),
+  nColorInt(245, 205, 47),
+  nColorInt(27, 42, 52),
+  nColorInt(40, 127, 70),
+  nColorInt(75, 151, 74),
+  nColorInt(226, 155, 63),
+  nColorInt(160, 95, 52),
+]
+
 proc randomBrick(): Brick =
   let maxIndex = possibleBricks.len
   let i = random(maxIndex)
@@ -44,7 +57,10 @@ proc randomAnchor(b: Brick, gridSize: int): Anchor =
   (ax, ay)
 
 proc randomColor(): Color =
-  nColor(random(1.0), random(1.0), random(1.0))
+  #nColor(random(1.0), random(1.0), random(1.0))
+  let maxIndex = possibleColors.len
+  let i = random(maxIndex)
+  result = possibleColors[i]
 
 iterator iterateCells(b: Brick, anchor: Anchor): (int,int) =
   for i in 0 ..< b.wx:
@@ -91,7 +107,7 @@ proc generateWorld*(): VertexData =
     let z2 = indexToCoord(a.y+b.wy, gridSize)
     let y1 = (maxHeight  ).float * 0.0096
     let y2 = (maxHeight+1).float * 0.0096
-    debug x1,x2,z1,z2,y1,y2
+    #debug x1,x2,z1,z2,y1,y2
     vd.addCube(x1, x2, y1+yDist, y2+yDist, z1+zDist, z2+zDist, randomColor())
 
   result = vd

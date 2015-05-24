@@ -17,7 +17,13 @@ proc `*`*(this: Mat3, that: Mat3): Mat3 =
       for k in 0 .. <3:
         result[i,j] = result[i,j] + this[i,k] * that[k,j]
         #result[i,j] += this[i,k] * that[k,j]
-  
+
+proc `*`*(m: Mat3, v: Vec3): Vec3 =
+  result.x = m[0,0]*v.x + m[0,1]*v.y + m[0,2]*v.z
+  result.y = m[1,0]*v.x + m[1,1]*v.y + m[1,2]*v.z
+  result.z = m[2,0]*v.x + m[2,1]*v.y + m[2,2]*v.z
+
+
 proc `$`*(m: Mat3): string =
   "Mat3($#)" % m.data.map(proc (x: ftype): string = $x).join(", ")
 
@@ -57,15 +63,15 @@ proc zero*(T: typedesc[Mat3]): Mat3 =
 
 # Additional operations
 proc inverse*(m: Mat3): Mat3 =
-  let a = m[0,0]
-  let b = m[1,0]
-  let c = m[2,0]
-  let d = m[0,1]
-  let e = m[1,1]
-  let f = m[2,1]
-  let g = m[0,2]
-  let h = m[1,2]
-  let i = m[2,2]
+  let a = m[0,0] # m[0,0]
+  let b = m[0,1] # m[1,0]
+  let c = m[0,2] # m[2,0]
+  let d = m[1,0] # m[0,1]
+  let e = m[1,1] # m[1,1]
+  let f = m[1,2] # m[2,1]
+  let g = m[2,0] # m[0,2]
+  let h = m[2,1] # m[1,2]
+  let i = m[2,2] # m[2,2]
   let det = 1.0 / (a*(e*i-f*h) - b*(d*i-f*g) + c*(d*h-e*g))
   result = nMat3(
     det*(e*i-f*h), det*(c*h-b*i), det*(b*f-c*e),

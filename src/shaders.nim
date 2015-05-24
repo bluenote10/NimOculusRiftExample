@@ -234,7 +234,8 @@ type
     unifLocCameraToClipMatrix: int
     unifLocModelToCameraMatrix: int
     unifLocNormalModelToCameraMatrix: int
-    unifLocCameraSpaceLightPos1: int 
+    unifLocCameraSpaceLightPos1: int
+    lightPos: Vec3
 
 proc initDefaultLightingShader*(filenameBase: string): DefaultLightingShader =
   let prog = shaderProgramCreate(filenameBase)
@@ -247,7 +248,7 @@ proc initDefaultLightingShader*(filenameBase: string): DefaultLightingShader =
   let unifLocModelToCameraMatrix       = prog.getUniformLocation("modelToCameraMatrix")
   let unifLocNormalModelToCameraMatrix = prog.getUniformLocation("normalModelToCameraMatrix")
   let unifLocCameraSpaceLightPos1      = prog.getUniformLocation("cameraSpaceLightPos")
-  
+
   DefaultLightingShader(
     prog: prog,
     attrLocPos3D: attrLocPos3D,
@@ -256,7 +257,8 @@ proc initDefaultLightingShader*(filenameBase: string): DefaultLightingShader =
     unifLocCameraToClipMatrix: unifLocCameraToClipMatrix,
     unifLocModelToCameraMatrix: unifLocModelToCameraMatrix,
     unifLocNormalModelToCameraMatrix: unifLocNormalModelToCameraMatrix,
-    unifLocCameraSpaceLightPos1: unifLocCameraSpaceLightPos1
+    unifLocCameraSpaceLightPos1: unifLocCameraSpaceLightPos1,
+    lightPos: nVec3(0,1,0)
   )
 
 proc setVertexAttribArrayAndPointer*(s: DefaultLightingShader, vd: VertexData) =
@@ -293,5 +295,7 @@ proc setModelview*(s: DefaultLightingShader, V: Mat4, Vinvopt: Option[Mat4] = no
   s.prog.use()
   s.prog.setUniform(s.unifLocModelToCameraMatrix, V)
   s.prog.setUniform(s.unifLocNormalModelToCameraMatrix, Vinv)
+  let cameraSpaceLightPos = (V * s.lightPos.toVec4).toVec3
+  s.prog.setUniform(s.unifLocCameraSpaceLightPos1, cameraSpaceLightPos)
 
   
