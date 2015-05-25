@@ -1,5 +1,5 @@
 
-import ../bindings/ovr as ovr
+import ovr
 import opengl
 import wrapgl
 import unsigned
@@ -131,7 +131,7 @@ proc initOvrWrapper*(hmdInst: HmdInstance, uncapped = false): OvrWrapper =
   eyeTextures[0] = cast[Texture](eyeTexturesGL[0])
   eyeTextures[1] = cast[Texture](eyeTexturesGL[1])
     
-  when true:
+  when false:
     debug eyeTexturesGL[0].Header.API
     debug eyeTexturesGL[0].TexId
     debug eyeTexturesGL[1].Header.API
