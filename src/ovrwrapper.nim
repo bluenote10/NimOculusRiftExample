@@ -1,5 +1,5 @@
 
-import ovr
+import libovr as ovr
 import opengl
 import wrapgl
 import unsigned

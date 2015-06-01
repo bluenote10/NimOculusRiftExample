@@ -1,4 +1,4 @@
 nimcache
 bin
 .changes
-src/ovr.nim
+src/libovr.nim
