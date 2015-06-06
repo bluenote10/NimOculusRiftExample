@@ -25,6 +25,7 @@ const possibleBricks = [
   #nBrick(8,2),
 ]
 
+# source: http://www.peeron.com/cgi-bin/invcgis/colorguide.cgi
 const possibleColors = [
   nColorInt(242, 243, 242),
   nColorInt(161, 165, 162),
@@ -37,6 +38,11 @@ const possibleColors = [
   nColorInt(226, 155, 63),
   nColorInt(160, 95, 52),
 ]
+
+# source: http://www.robertcailliau.eu/Lego/Dimensions/zMeasurements-en.xhtml
+const
+  legoWidth  = 0.008
+  legoHeight = 0.0096
 
 proc randomBrick(): Brick =
   let maxIndex = possibleBricks.len
@@ -70,7 +76,7 @@ iterator iterateCells(b: Brick, anchor: Anchor): (int,int) =
 
 proc indexToCoord(i, gridSize: int): float =
   let half = gridSize / 2
-  (i.float-half) * 0.008
+  (i.float-half) * legoWidth
 
 proc generateWorld*(): VertexData =
   var vd = initVertexData(10, {vkPos3D: 0, vkNormal: 12, vkColor: 24}.toTable)
@@ -105,8 +111,8 @@ proc generateWorld*(): VertexData =
     let x2 = indexToCoord(a.x+b.wx, gridSize)
     let z1 = indexToCoord(a.y, gridSize)
     let z2 = indexToCoord(a.y+b.wy, gridSize)
-    let y1 = (maxHeight  ).float * 0.0096
-    let y2 = (maxHeight+1).float * 0.0096
+    let y1 = (maxHeight  ).float * legoHeight
+    let y2 = (maxHeight+1).float * legoHeight
     #debug x1,x2,z1,z2,y1,y2
     vd.addCube(x1, x2, y1+yDist, y2+yDist, z1+zDist, z2+zDist, randomColor())
 
